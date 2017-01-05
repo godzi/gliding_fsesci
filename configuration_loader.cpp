@@ -16,6 +16,10 @@ SimulationParameters assign_simulation_parameters_from_json(SimulationParameters
 	if (!(jsonobjsimp["timeStep"].empty())) {
 		simp.timeStep = stod(jsonobjsimp["timeStep"].get<std::string>());
 	}
+	if (!(jsonobjsimp["saveFrequency"].empty())) {
+		simp.saveFrequency = std::stoi(jsonobjsimp["saveFrequency"].get<std::string>());
+	}
+	
 	return simp;
 }
 
@@ -34,6 +38,9 @@ Configuration assign_config_from_json(Configuration conf, json jsonobj) {
 		conf.modelParameters.T= stod(jsonobj["ModelParameters"]["T"].get<std::string>());
 		conf.modelParameters.kT = kBoltz*conf.modelParameters.T;
 	}
+	if (!(jsonobj["ModelParameters"]["thermalNoiseOn"].empty())) {
+		conf.modelParameters.thermalNoiseOn = stod(jsonobj["ModelParameters"]["thermalNoiseOn"].get<std::string>());
+	}	
 	if (!(jsonobj["ModelParameters"]["MAPsDiffusion"].empty())) {
 		conf.modelParameters.MAPsDiffusion = stod(jsonobj["ModelParameters"]["MAPsDiffusion"].get<std::string>());
 	}

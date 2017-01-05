@@ -10,6 +10,7 @@ struct SimulationParameters
 	// simulation parameters
 	double totalTime;//
 	double timeStep;//
+	int saveFrequency;//save evry saveFrequency step
 };
 
 
@@ -25,6 +26,7 @@ struct ModelParameters
 {
 	double T ;
 	double kT;
+	double thermalNoiseOn;
 	double MAPsDiffusion ;
 	double MAPstiffness ;
 	double MAPforcesOn;

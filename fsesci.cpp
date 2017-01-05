@@ -34,7 +34,7 @@
 static constexpr unsigned nThreads = 5;
 
 // Initialize global constants
-std::string inputparamfile = "C:\\Users\\Tolya\\Documents\\Visual Studio 2015\\Projects\\gliding_fsesci\\Release\\config_debug.json";
+//std::string inputparamfile = "C:\\Users\\Tolya\\Documents\\Visual Studio 2015\\Projects\\gliding_fsesci\\Release\\newconfig.json";
 const double E = std::exp(1.0);
 const double kBoltz= 1.38064852e-5;// (*pN um *)
 
@@ -186,7 +186,7 @@ public:
 		/// test for binding
 		for (int i = 1; i <= _NumberofMTsites;i++) {
 			
-			_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*(i - 1);
+			_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*((double)i - 1);
 
 			//std::cout << "_unboundMaps.size() = " << _unboundMaps.size() << std::endl;
 			//std::cout << "iter->_mountCoordinate = " << _unboundMaps.begin()->_mountCoordinate << std::endl;
@@ -278,7 +278,7 @@ public:
 					/// Test for binding
 				for (int it = 0; it < 6; it++) {
 					int i = sitestocheck[it];
-					_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*(i - 1);
+					_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*((double)i - 1);
 
 					for (auto iter = _unboundMaps.begin(); iter != _unboundMaps.end(); ) {
 						if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= (_mP.deltaPeriod / 2)) {
@@ -392,14 +392,15 @@ public:
 				}
 
 		//////
-		double SummForces = (-1)* (_mP.KINESINforcesOn* _state.SummKINESINForces+ _mP.MAPforcesOn* _state.SummMAPForces);
-		 _state.SummKINESINForces = 0.0;
-		 _state.SummMAPForces = 0.0;
-		////
-		_MTpositionStep= (_sP.timeStep / _mP.gammaMT)*SummForces +	sqrt(2 * kBoltz*_mP.T*_sP.timeStep / _mP.gammaMT) *	takeNormalRandomNumber();
-		_state.MTposition = _state.MTposition + _MTpositionStep;
-		writeStateTolog();
-		
+			double SummForces = (-1)* (_mP.KINESINforcesOn* _state.SummKINESINForces+ _mP.MAPforcesOn* _state.SummMAPForces);
+			 _state.SummKINESINForces = 0.0;
+			 _state.SummMAPForces = 0.0;
+			////
+			_MTpositionStep= (_sP.timeStep / _mP.gammaMT)*SummForces +	_mP.thermalNoiseOn*sqrt(2 * kBoltz*_mP.T*_sP.timeStep / _mP.gammaMT) *	takeNormalRandomNumber();
+			_state.MTposition = _state.MTposition + _MTpositionStep;
+			if (taskIteration %_sP.saveFrequency == 0) {
+				writeStateTolog();
+			}
 		}
 	}
 
@@ -450,8 +451,12 @@ int main(int argc, char *argv[])
 		std::cout << "Sorry users, no help donations today." << std::endl;
 	}
 	char * param_input_filename = getCmdOption(argv, argv + argc, "-paramsfile");
-	char * output_filename = getCmdOption(argv, argv + argc, "-resultfile");
-
+	//char * output_filename = getCmdOption(argv, argv + argc, "-resultfile");
+	
+	std::string inputparamfile;
+	inputparamfile.append(param_input_filename);
+	
+	
 	// Create and load simulation parameters and configuration, values are taken from json file
 	const auto simulationParameters = load_simulationparams(inputparamfile);
 	const auto configurations = load_configuration(inputparamfile);
