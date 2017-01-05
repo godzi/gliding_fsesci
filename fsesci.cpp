@@ -235,7 +235,7 @@ public:
 			
 			if (counterNormalRandomNumber == _optimalGaussianBuffer) {
 				gaussGenerator->generateNumbers();
-				std::cout << ", NormalRandomCounter = " << counterNormalRandomNumber << std::endl;
+				//std::cout << ", NormalRandomCounter = " << counterNormalRandomNumber << std::endl;
 				counterNormalRandomNumber = 0;
 
 			}
@@ -245,7 +245,7 @@ public:
 			//std::cout << counterFlatRandomNumber << " " << rndFlatNumbers[counterFlatRandomNumber] << std::endl;
 			if (counterFlatRandomNumber == _optimalFlatBuffer) {
 				flatGenerator->generateNumbers();
-				std::cout << ", FlatRandomCounter = " << counterFlatRandomNumber << std::endl;
+			//	std::cout << ", FlatRandomCounter = " << counterFlatRandomNumber << std::endl;
 				counterFlatRandomNumber = 0;
 			}
 			return rndFlatNumbers[counterFlatRandomNumber++];
@@ -260,7 +260,18 @@ public:
 		_state.SummMAPForces = 0.0;
 		///
 		/// Code below for single iteration
+		double timeCompute = 0.0;
 		for (unsigned taskIteration = 0; taskIteration < nSteps; taskIteration++) {
+			if (taskIteration % 500000 == 0) {
+				double procent = 100 * round(100000* (double)taskIteration / (double)nSteps) / 100000;
+				std::cout << procent<< "%" << std::endl;
+				
+				std::cout << __rdtsc()-timeCompute << std::endl;
+				timeCompute = __rdtsc();
+				//std::cout << nst << std::endl;
+			}
+			
+			
 			//std::cout << "taskIteration = " << taskIteration << ", FlatRandomCounter = " << counterFlatRandomNumber << ", FlatRandom = " << rndFlatNumbers[counterFlatRandomNumber] << ", BoundMAPs = " << _boundMaps.size() <<std::endl;
 			//takeFlatRandomNumber();
 
@@ -425,8 +436,8 @@ private:
 public:
 	int _testFlatBufferSizeFreq = 10;//iteration beetween tests
 	int _testGaussBufferSizeFreq = 10000;
-	size_t _optimalGaussianBuffer = 300000;
-	size_t _optimalFlatBuffer = 900000;
+	size_t _optimalGaussianBuffer = 600000;
+	size_t _optimalFlatBuffer = 600000;
 };
 
 
@@ -500,7 +511,7 @@ int main(int argc, char *argv[])
 	//std::cout << macrostepsNum << std::endl;
 	//for (int savedstep = 0; savedstep < (100'000); savedstep++) {
 
-		for (int macrostep = 0; macrostep < macrostepsNum; macrostep++) {
+		//for (int macrostep = 0; macrostep < macrostepsNum; macrostep++) {
 			
 			
 			gaussGenerator.generateNumbers();
@@ -531,7 +542,7 @@ int main(int argc, char *argv[])
 				std::cout << __rdtsc() << std::endl;
 				//std::cout << nst << std::endl;
 			}*/
-		}
+		//}
 
 		
 	//}

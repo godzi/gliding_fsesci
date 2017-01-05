@@ -36,7 +36,7 @@ std::string readfile(std::string filename) {
 		myfile.close();
 	}
 
-	else std::cout << "Unable to open file";
+	else std::cout << "Unable to open json file";
 	return filecontents;
 }
 // function to parse json objects
