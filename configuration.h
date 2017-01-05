@@ -8,9 +8,8 @@
 struct SimulationParameters
 {
 	// simulation parameters
-	double expTime;//
-	int microsteps;// 10MHz scanning
-	int nTotal ;	//10^-2 seconds total
+	double totalTime;//
+	double timeStep;//
 };
 
 
@@ -24,56 +23,40 @@ struct LoggerParameters
 };
 struct ModelParameters
 {
-	/////
-	//Global paramters
-	double T ;					//temperature
+	double T ;
 	double kT;
-
-	//Parameters of potential
-	double G ;					// (* kT | Depth of the potential *)
-	double L ;					//(* um | period of the periodic potential *)
-	double sigma;			//(* um | width of the binding well *)
-
-									//Parameters of diffusion
-	double DMol ;					//(* um^2/s | free diffusion coefficient of the protein in water *)
-	double DBead ;					// (* um^2/s | free diffusion coefficient of 0.5 um bead in water *)
-	double DMT;
-
-	double gammaMol;		//(* pN s/um | friction drag coefficient for protein *)
-	double gammaBead ;		//(* pN s/um | friction drag coefficient for 0.5 um bead *)
-	double gammaMT ;				//(* pN s/um | friction drag coefficient for 0.5 um for MT *)
-
-											// Parameters of stiffness
-	double trapstiff;			//(* pN/um | stiffness of the trap *) 
-	double MTstiffL ;			//(* pN/um | stiffness of the MT *) 
-	double MTstiffR;
-	double molstiff ;				//(*pN / um| stiffness of the NDC80 *)
-
+	double MAPsDiffusion ;
+	double MAPstiffness ;
+	double KINESINstiffness ;
+	double vUnloaded ;
+	double omega ;
+	double Fstall ;
+	double deltaPeriod ;
+	double EtaMT;
+	double dMT ;
+	double hMT ;
+	double gammaMT;
 };
 
 struct SystemState
 {
-	double xMol;
-	double xMT;
-	double xBeadl;
-	double xBeadr;
+	double MTposition;
 
 	template <typename F>
 	static void iterateFields(F&& f) {
-		f(&SystemState::xMol, "xMol");
-		f(&SystemState::xMT, "xMT");
-		f(&SystemState::xBeadl, "xBeadl");
-		f(&SystemState::xBeadr, "xBeadr");
+		f(&SystemState::MTposition, "MTposition");
 	}
 };
 
 struct InitialConditions
 {
 	SystemState initialState;
-
-	double xPed;   ////////////// Is it really iC????
-	double xTrapl; // Must be negative for prestretch ////////////// Is it really iC????
-	double xTrapr; // Must be positive for prestretch ////////////// Is it really iC????
+	double MAPdistance;
+	double KINESINdistance;
+	double surfaceLength;
+	double MTlength;
+	
+	
 };
 // Composition of parameters
 struct Configuration

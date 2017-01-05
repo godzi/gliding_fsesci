@@ -27,13 +27,14 @@
 #include "configuration.h"
 #include "configuration_loader.h"
 #include "mkl_gaussian_parallel_generator.h"
+#include "mkl_flat_parallel_generator.h"
 
 #include <fstream>
 
 static constexpr unsigned nThreads = 5;
 
 // Initialize global constants
-std::string inputparamfile = "C:\\Users\\Tolya\\Documents\\Visual Studio 2015\\Projects\\Langevien2_New\\Release\\config_debug.json";
+std::string inputparamfile = "C:\\Users\\Tolya\\Documents\\Visual Studio 2015\\Projects\\gliding_fsesci\\Release\\config_debug.json";
 const double E = std::exp(1.0);
 const double kBoltz= 1.38064852e-5;// (*pN um *)
 
@@ -87,20 +88,54 @@ double mod(double a, double N)
 	return a - N*floor(a / N); //return in range [0, N)
 }
 
-class PotentialForce 
+class KINESINvLoaded
 {
 public:
-	double G=0.0;
-	double L=0.0;
-	double E=0.0; 
-	double powsigma=0.0;
+	double vUnloaded =0.0;
+	double Fstall =0.0;
+	double omega =0.0;
 	
-	double calc(double unmodvar) const
+	double calc(double Force) const
 	{
-		double var = mod(unmodvar, L);
-		return (G*(-L / 2.0 + var)) / (pow(E, pow(L - 2.0 * var, 2) / (8.0*powsigma))*powsigma);//l1d cache 4096 of doubles -> use 50% of it?
+		return vUnloaded*(1 - (pow((Force / Fstall) , omega)));
+			
 		
 	}
+};
+
+class boundKINESIN
+{
+public:
+	boundKINESIN(double coordinate, int MTsite, double springLength) :_mountCoordinate{ coordinate }, _MTsite{ MTsite }, _springLength{ springLength }
+	{	};
+	double _mountCoordinate;
+	int _MTsite;
+	double _springLength;
+};
+class unboundKINESIN
+{
+public:
+	unboundKINESIN(double coordinate) {
+		_mountCoordinate = coordinate;
+	}
+	double _mountCoordinate;
+};
+class boundMAP
+{
+public:
+	boundMAP(double coordinate, int MTsite, double springLength) :_mountCoordinate{ coordinate }, _MTsite{ MTsite }, _springLength{ springLength }
+	{	};
+	double _mountCoordinate;
+	int _MTsite;
+	double _springLength;
+};
+class unboundMAP
+{
+public:
+	unboundMAP(double coordinate) {
+		_mountCoordinate = coordinate;
+	}
+	double _mountCoordinate;
 };
 
 class Task
@@ -117,37 +152,192 @@ public:
 			auto logger = std::make_unique<BinaryFileLogger>(loggerParameters, field, fieldName);// creates object of class BinaryFileLogger but returns to logger variable the unique pointer to it. // for creation of object implicitly with arguments like this also remind yourself the vector.emplace(args) .
 			this->_loggers.push_back(std::move(logger));// unique pointer can't be copied, only moved like this
 		});
+
+		
+
 	}
+	int countTotalSteps() {
+		return (int)ceil(_sP.totalTime / _sP.timeStep);
+	}
+	int initializeState() {
+		
+		
+		_NumberofMTsites = (int)floor(_initC.MTlength / _mP.deltaPeriod);
+		
+		
+		_kinesinvLoaded.vUnloaded = _mP.vUnloaded;
+		_kinesinvLoaded.Fstall = _mP.Fstall;
+		_kinesinvLoaded.omega = _mP.omega;
+		/// Initial binding
+		for (double i = 0; i < _initC.surfaceLength - _initC.KINESINdistance; i = i + _initC.KINESINdistance) {
+			_unboundKinesins.emplace_back(i);
+		}
+		for (double i = 0; i < _initC.surfaceLength - _initC.MAPdistance; i = i + _initC.MAPdistance) {
+			_unboundMaps.emplace_back(i);
+		}
+		////////////////////////
+		int neededFlatBufferSize = _unboundKinesins.size() + 2 * _unboundMaps.size();
+		_kprob = _mP.MAPsDiffusion / (_mP.deltaPeriod*_mP.deltaPeriod);
+		////
+		/// test for binding
+		for (int i = 1; i <= _NumberofMTsites;i++) {
+			_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*(i - 1);
+			
+			for (auto iter = _unboundMaps.begin(); iter != _unboundMaps.end(); ) {
+				if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= (_mP.deltaPeriod / 2)) {
+					_boundMaps.emplace_back(iter->_mountCoordinate, i, iter->_mountCoordinate - _SurfaceDistanceofiSite);
+					iter = _unboundMaps.erase(iter);
+				}
+				else
+				{
+					++iter;
+				}					
+			}
+			for (auto iter = _unboundKinesins.begin(); iter != _unboundKinesins.end(); ) {
+				if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= (_mP.deltaPeriod / 2)) {
+					_boundKinesins.emplace_back(iter->_mountCoordinate, i, iter->_mountCoordinate - _SurfaceDistanceofiSite);
+					iter = _unboundKinesins.erase(iter);
+				}
+				else
+				{
+					++iter;
+				}
+			}
+			
+		}
 
+		return neededFlatBufferSize;
+	}
+	//double taskStartTime,
 	// rndNumbers must contain 3 * nSteps random numbers
-	void advanceState(unsigned nSteps, const double* rndNumbers) {
+	void advanceState(unsigned nSteps,  const double* rndNormalNumbers, const double* rndFlatNumbers) {
 		// configurate force object
-		PotentialForce potentialForce;
-		potentialForce.E = E;
-		potentialForce.G = _mP.G;
-		potentialForce.L = _mP.L;
-		potentialForce.powsigma = pow(_mP.sigma, 2.0);
-
-		auto takeRandomNumber = [rndNumbers] () mutable -> double {
-			return *(rndNumbers++);
+		
+		auto takeNormalRandomNumber = [rndNormalNumbers] () mutable -> double {
+			return *(rndNormalNumbers++);
+		};
+		auto takeFlatRandomNumber = [rndFlatNumbers]() mutable -> double {
+			return *(rndFlatNumbers++);
 		};
 
-		for (unsigned i = 0; i < nSteps; i++) {
-			const double rnd_xBeadl = takeRandomNumber();
-			const double rnd_xBeadr = takeRandomNumber();
-			const double rnd_xMol = takeRandomNumber();
-			
-			const double MT_Mol_force = potentialForce.calc(_state.xMol - _state.xMT);
+		// Sites on MT to be checked for new bindings every iteration
+		int sitestocheck[6] = { 1, 2, 3, _NumberofMTsites-2,_NumberofMTsites-1,_NumberofMTsites };
+		
+		/// Code below for single iteration
+		for (unsigned taskIteration = 0; taskIteration < nSteps; taskIteration++) {
+		
+					/// Test for binding
+				for (int it = 0; it < 6; it++) {
+					int i = sitestocheck[it];
+					_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*(i - 1);
 
-			const double next_xMT = _state.xMT + (_sP.expTime / _mP.gammaMT)*(((-_mP.MTstiffL)*(_state.xMT - _state.xBeadl)) + (_mP.MTstiffR*(_state.xBeadr - _state.xMT)) - (MT_Mol_force));
-			const double next_xBeadl = _state.xBeadl + (_sP.expTime / _mP.gammaBead)*(((-_mP.trapstiff)*(_state.xBeadl - _initC.xTrapl)) + (_mP.MTstiffL*(_state.xMT - _state.xBeadl))) + sqrt(2.0*_mP.DBead*_sP.expTime) * rnd_xBeadl;
-			const double next_xBeadr = _state.xBeadr + (_sP.expTime / _mP.gammaBead)*(((-_mP.MTstiffR)*(_state.xBeadr - _state.xMT)) + ((-_mP.trapstiff)*(_state.xBeadr - _initC.xTrapr))) + sqrt(2.0*_mP.DBead*_sP.expTime) * rnd_xBeadr;
-			const double next_xMol = _state.xMol + (_sP.expTime / _mP.gammaMol) *(MT_Mol_force + _mP.molstiff*(_initC.xPed - _state.xMol)) + sqrt(2.0*_mP.DMol*_sP.expTime) * rnd_xMol;
-			
-			_state.xMT = next_xMT;
-			_state.xBeadl = next_xBeadl;
-			_state.xBeadr = next_xBeadr;
-			_state.xMol = next_xMol;
+					for (auto iter = _unboundMaps.begin(); iter != _unboundMaps.end(); ) {
+						if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= (_mP.deltaPeriod / 2)) {
+							_boundMaps.emplace_back(iter->_mountCoordinate, i, iter->_mountCoordinate - _SurfaceDistanceofiSite);
+							iter = _unboundMaps.erase(iter);
+						}
+						else
+						{
+							++iter;
+						}
+					}
+					for (auto iter = _unboundKinesins.begin(); iter != _unboundKinesins.end(); ) {
+						if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= (_mP.deltaPeriod / 2)) {
+							_boundKinesins.emplace_back(iter->_mountCoordinate, i, iter->_mountCoordinate - _SurfaceDistanceofiSite);
+							iter = _unboundKinesins.erase(iter);
+						}
+						else
+						{
+							++iter;
+						}
+					}
+
+				}
+				/// Test for stepping for MT bound MAPs AND UPDATE SPRING EXTENSION LENGTHS
+		
+				for (auto iter = _boundMaps.begin(); iter != _boundMaps.end(); ) {
+					// update spring extensions based on previous microtubule step
+					iter->_springLength = iter->_springLength + _MTpositionStep;
+					///
+					double kpow = (-iter->_springLength*_mP.MAPstiffness)*_mP.deltaPeriod / (2 * kBoltz*_mP.T);
+					double kPlus = _kprob*exp(kpow);
+					double kMinus =_kprob*exp(-kpow);
+					if (takeFlatRandomNumber() > exp(-(kMinus + kPlus)*_sP.timeStep)) {
+					// Make step
+						if (takeFlatRandomNumber() < kMinus / (kMinus + kPlus)) {
+						//	Make step to the left
+							if (((iter->_MTsite) - 1) >= 1)
+							{
+							//test that we still have the site there
+								iter->_MTsite = iter->_MTsite - 1;
+								iter->_springLength = iter->_springLength - _mP.deltaPeriod;
+							}
+							else
+							{
+								_unboundMaps.emplace_back(iter->_mountCoordinate);
+								_boundMaps.erase(iter);
+
+							}				
+						}
+						else
+						{
+						// Make step to the right
+							if (((iter->_MTsite) + 1) <= _NumberofMTsites)
+							{
+								//test that we still have the site there
+								iter->_MTsite = iter->_MTsite + 1;
+								iter->_springLength = iter->_springLength + _mP.deltaPeriod;
+							}
+							else
+							{
+								_unboundMaps.emplace_back(iter->_mountCoordinate);
+								_boundMaps.erase(iter);
+
+							}
+						}
+						// Count new summ forces
+						_SummMAPForces = _SummMAPForces + iter->_springLength*_mP.MAPstiffness;
+						//
+						++iter;
+					}			
+				}
+				////
+				/// Test for stepping for MT bound MT kinesins AND UPDATE SPRING EXTENSION LENGTHS
+				for (auto iter = _boundKinesins.begin(); iter != _boundKinesins.end(); ) {
+					// update spring extensions based on previous microtubule step
+					iter->_springLength = iter->_springLength + _MTpositionStep;
+					
+					//
+					double pstep =exp(-_kinesinvLoaded.calc(fabs(_mP.KINESINstiffness*iter->_springLength))*(_sP.timeStep / (2 * _mP.deltaPeriod)));
+					if (takeFlatRandomNumber() > pstep)
+					{
+						//make step (always 2 site periods to the plus end of MT therefore to higher site number)
+						if (iter->_MTsite + 2 <= _NumberofMTsites )
+						{
+							iter->_MTsite = iter->_MTsite + 2;
+							iter->_springLength = iter->_springLength + 2* _mP.deltaPeriod;
+						}
+						else
+						{
+							_unboundKinesins.emplace_back(iter->_mountCoordinate);
+							_boundKinesins.erase(iter);
+						}
+					}
+					// Count new summ forces
+					_SummKINESINForces = _SummKINESINForces + iter->_springLength*_mP.KINESINstiffness;
+					//
+					++iter;
+				}
+
+		//////
+		double SummForces = (-1)* (_SummKINESINForces+_SummMAPForces);
+		_SummKINESINForces = 0.0;
+		_SummMAPForces = 0.0;
+		////
+		_MTpositionStep= (_sP.timeStep / _mP.gammaMT)*SummForces +	sqrt(2 * kBoltz*_mP.T*_sP.timeStep / _mP.gammaMT) *	takeNormalRandomNumber();
+		_state.MTposition = _state.MTposition + _MTpositionStep;
+		writeStateTolog();
+		
 		}
 	}
 
@@ -163,6 +353,25 @@ private:
 	const InitialConditions _initC;
 	SystemState _state;
 	std::vector<std::unique_ptr<BinaryFileLogger>> _loggers;
+	
+	//
+	KINESINvLoaded _kinesinvLoaded;
+	////
+	int _NumberofMTsites;
+	/*std::vector <double> _KINESINMountsites;
+	std::vector <double> _MAPMountsites;
+	std::vector <double> _MAPsitesonMT;
+	std::vector <double> _KINESINsitesonMT;
+	*/
+	std::vector <unboundKINESIN> _unboundKinesins;
+	std::vector <boundKINESIN> _boundKinesins;
+	std::vector <unboundMAP> _unboundMaps;
+	std::vector <boundMAP> _boundMaps;
+	double _SurfaceDistanceofiSite;
+	double _MTpositionStep=0.0;
+	double _kprob;
+	double _SummKINESINForces=0.0;
+	double _SummMAPForces=0.0;
 };
 
 
@@ -186,12 +395,12 @@ int main(int argc, char *argv[])
 		auto task = std::make_unique<Task>(simulationParameters, configuration);
 		tasks.push_back(std::move(task));
 	}
-
+	
 	// Check if number of configurations correspond to predefined threads number
-	if (configurations.size() != nThreads) {
+	/*if (configurations.size() != nThreads) {
 		throw std::runtime_error{ "Please check the number of configurations in json corresponds to the number of threads implemented in simulator" };
 	}
-
+	*/
 	/*
 
 	///////////////////////////////
@@ -219,15 +428,32 @@ int main(int argc, char *argv[])
 		saved step range is 10'000 -> nTotal
 		microsteps is macrostep*(buffersize/3)
 		*/
-	MklGaussianParallelGenerator generator1(0.0, 1.0, 900'000, 5);
 
-	for (int savedstep = 0; savedstep < (100'000); savedstep++) {
+	int optimalFlatBufferSize = 900000;
+	int flatbuffersizeperStep = tasks[0]->initializeState();
+	int totalSteps = tasks[0]->countTotalSteps();
+	int macrostepsNum = 1;
+	if (flatbuffersizeperStep*totalSteps > optimalFlatBufferSize) {
+		macrostepsNum = (int)ceil(flatbuffersizeperStep*totalSteps / optimalFlatBufferSize);
+	}
+	int taskStepsNum = (int)floor(optimalFlatBufferSize/ flatbuffersizeperStep);
+	MklGaussianParallelGenerator gaussGenerator(0.0, 1.0, (int)ceil(optimalFlatBufferSize/ flatbuffersizeperStep), 1);
+	MklFlatParallelGenerator flatGenerator;
+	flatGenerator.initialize(0.0, 1.0, optimalFlatBufferSize, 4);
+	std::cout << macrostepsNum << std::endl;
+	//for (int savedstep = 0; savedstep < (100'000); savedstep++) {
 
-		for (int macrostep = 0; macrostep < (900'000 / 900'000); macrostep++) {
+		for (int macrostep = 0; macrostep < macrostepsNum; macrostep++) {
 			
-			generator1.generateNumbers();
-			const auto buffData = generator1.getNumbersBuffer();
+			
+			gaussGenerator.generateNumbers();
+			const auto gaussBuffData = gaussGenerator.getNumbersBuffer();
+			flatGenerator.generateNumbers();
+			const auto flatBuffData = flatGenerator.getNumbersBuffer();
 
+			tasks[0]->advanceState(taskStepsNum, gaussBuffData, flatBuffData);
+			
+			/*
 			#pragma omp parallel num_threads(nThreads) shared(buffData, tasks)
 			{
 				const auto begin = __rdtsc();
@@ -240,15 +466,18 @@ int main(int argc, char *argv[])
 			for (const auto& task : tasks) {
 				task->writeStateTolog();
 			}
+			*/
+		
+			if (macrostep % 10 == 0) {
+				double procent = 100*round(1000*macrostep / macrostepsNum)/1000;
+				std::cout << procent << "%" << std::endl;
+				std::cout << __rdtsc() << std::endl;
+				//std::cout << nst << std::endl;
+			}
 		}
 
-		if (savedstep % 100 == 0) {
-			double procent = round(100 * 100 * savedstep / (100'000)) / 100;
-			std::cout << procent << "%" << std::endl;
-			std::cout << __rdtsc() << std::endl;
-			//std::cout << nst << std::endl;
-		}
-	}
+		
+	//}
 }
 
 //std::chrono
