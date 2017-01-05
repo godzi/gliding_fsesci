@@ -45,10 +45,14 @@ struct ModelParameters
 struct SystemState
 {
 	double MTposition;
+	double SummKINESINForces;
+	double SummMAPForces;
 
 	template <typename F>
 	static void iterateFields(F&& f) {
 		f(&SystemState::MTposition, "MTposition");
+		f(&SystemState::SummKINESINForces, "SummKINESINForces");
+		f(&SystemState::SummMAPForces, "SummMAPForces");
 	}
 };
 
@@ -59,7 +63,8 @@ struct InitialConditions
 	double KINESINdistance;
 	double surfaceLength;
 	double MTlength;
-	
+	double surfaceKINESINstartPoint;
+	double surfaceMAPstartPoint;
 	
 };
 // Composition of parameters

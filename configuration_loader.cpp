@@ -92,7 +92,14 @@ Configuration assign_config_from_json(Configuration conf, json jsonobj) {
 	}
 	if (!(jsonobj["InitialConditions"]["MTposition"].empty())) {
 		conf.initialConditions.initialState.MTposition = stod(jsonobj["InitialConditions"]["MTposition"].get<std::string>());
+	}	
+	if (!(jsonobj["InitialConditions"]["surfaceMAPstartPoint"].empty())) {
+		conf.initialConditions.surfaceMAPstartPoint = stod(jsonobj["InitialConditions"]["surfaceMAPstartPoint"].get<std::string>());
 	}
+	if (!(jsonobj["InitialConditions"]["surfaceKINESINstartPoint"].empty())) {
+		conf.initialConditions.surfaceKINESINstartPoint= stod(jsonobj["InitialConditions"]["surfaceKINESINstartPoint"].get<std::string>());
+	}
+
 	//// Assign Dynamic Coordinates from json initial conditions
 	if (!(jsonobj["InitialConditions"]["MTposition"].empty())) {
 		conf.currentState.MTposition = stod(jsonobj["InitialConditions"]["MTposition"].get<std::string>());
