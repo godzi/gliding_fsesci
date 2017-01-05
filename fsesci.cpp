@@ -94,11 +94,13 @@ public:
 	double vUnloaded =0.0;
 	double Fstall =0.0;
 	double omega =0.0;
-	
+	double kinesinPparam = 0.0;
+	double forceVelocityOn = 1.0;
 	double calc(double Force) const
 	{
-		return vUnloaded*(1 - (pow((Force / Fstall) , omega)));
-			
+		//
+		//return vUnloaded*(1 - (pow((Force / Fstall) , omega)));
+		return  forceVelocityOn*(vUnloaded / (kinesinPparam + (1 - kinesinPparam)*exp(Force*2.79 / 4.11)))+(1- forceVelocityOn)*vUnloaded;
 		
 	}
 };
@@ -159,7 +161,7 @@ public:
 	int countTotalSteps() {
 		return (int)ceil(_sP.totalTime / _sP.timeStep);
 	}
-	int initializeState() {
+	size_t initializeState() {
 		
 		
 		_NumberofMTsites = (int)floor(_initC.MTlength / _mP.deltaPeriod);
@@ -168,6 +170,8 @@ public:
 		_kinesinvLoaded.vUnloaded = _mP.vUnloaded;
 		_kinesinvLoaded.Fstall = _mP.Fstall;
 		_kinesinvLoaded.omega = _mP.omega;
+		_kinesinvLoaded.kinesinPparam = _mP.kinesinPparam;
+		_kinesinvLoaded.forceVelocityOn = _mP.forceVelocityOn;
 		/// Initial binding
 		for (double i = 0; i < _initC.surfaceLength - _initC.KINESINdistance; i = i + _initC.KINESINdistance) {
 			_unboundKinesins.emplace_back(i);
@@ -176,7 +180,7 @@ public:
 			_unboundMaps.emplace_back(i);
 		}
 		////////////////////////
-		int neededFlatBufferSize = _unboundKinesins.size() + 2 * _unboundMaps.size();
+		size_t neededFlatBufferSize = _unboundKinesins.size() + 2 * _unboundMaps.size();
 		_kprob = _mP.MAPsDiffusion / (_mP.deltaPeriod*_mP.deltaPeriod);
 		////
 		/// test for binding
@@ -330,7 +334,7 @@ public:
 				}
 
 		//////
-		double SummForces = (-1)* (_SummKINESINForces+_SummMAPForces);
+		double SummForces = (-1)* (_mP.KINESINforcesOn*_SummKINESINForces+ _mP.MAPforcesOn*_SummMAPForces);
 		_SummKINESINForces = 0.0;
 		_SummMAPForces = 0.0;
 		////
@@ -429,8 +433,8 @@ int main(int argc, char *argv[])
 		microsteps is macrostep*(buffersize/3)
 		*/
 
-	int optimalFlatBufferSize = 900000;
-	int flatbuffersizeperStep = tasks[0]->initializeState();
+	size_t optimalFlatBufferSize = 900000;
+	size_t flatbuffersizeperStep = tasks[0]->initializeState();
 	int totalSteps = tasks[0]->countTotalSteps();
 	int macrostepsNum = 1;
 	if (flatbuffersizeperStep*totalSteps > optimalFlatBufferSize) {

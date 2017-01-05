@@ -40,11 +40,20 @@ Configuration assign_config_from_json(Configuration conf, json jsonobj) {
 	if (!(jsonobj["ModelParameters"]["MAPstiffness"].empty())) {
 		conf.modelParameters.MAPstiffness = stod(jsonobj["ModelParameters"]["MAPstiffness"].get<std::string>());
 	}
+	if (!(jsonobj["ModelParameters"]["MAPforcesOn"].empty())) {
+		conf.modelParameters.MAPforcesOn = stod(jsonobj["ModelParameters"]["MAPforcesOn"].get<std::string>());
+	}
 	if (!(jsonobj["ModelParameters"]["KINESINstiffness"].empty())) {
 		conf.modelParameters.KINESINstiffness = stod(jsonobj["ModelParameters"]["KINESINstiffness"].get<std::string>());
 	}
+	if (!(jsonobj["ModelParameters"]["KINESINforcesOn"].empty())) {
+		conf.modelParameters.KINESINforcesOn = stod(jsonobj["ModelParameters"]["KINESINforcesOn"].get<std::string>());
+	}
 	if (!(jsonobj["ModelParameters"]["vUnloaded"].empty())) {
 		conf.modelParameters.vUnloaded = stod(jsonobj["ModelParameters"]["vUnloaded"].get<std::string>());
+	}
+	if (!(jsonobj["ModelParameters"]["forceVelocityOn"].empty())) {
+		conf.modelParameters.forceVelocityOn = stod(jsonobj["ModelParameters"]["forceVelocityOn"].get<std::string>());
 	}
 	if (!(jsonobj["ModelParameters"]["omega"].empty())) {
 		conf.modelParameters.omega = stod(jsonobj["ModelParameters"]["omega"].get<std::string>());
@@ -52,6 +61,9 @@ Configuration assign_config_from_json(Configuration conf, json jsonobj) {
 	if (!(jsonobj["ModelParameters"]["Fstall"].empty())) {
 		conf.modelParameters.Fstall = stod(jsonobj["ModelParameters"]["Fstall"].get<std::string>());
 	}
+	if (!(jsonobj["ModelParameters"]["kinesinPparam"].empty())) {
+		conf.modelParameters.kinesinPparam = stod(jsonobj["ModelParameters"]["kinesinPparam"].get<std::string>());
+	}	
 	if (!(jsonobj["ModelParameters"]["deltaPeriod"].empty())) {
 		conf.modelParameters.deltaPeriod = stod(jsonobj["ModelParameters"]["deltaPeriod"].get<std::string>());
 	}

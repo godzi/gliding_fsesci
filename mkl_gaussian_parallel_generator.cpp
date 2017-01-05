@@ -32,7 +32,7 @@ void MklGaussianParallelGenerator::generateNumbers()
 		const std::size_t begin = _nPerThread * threadId;
 		const auto generationResult = vdRngGaussian(
 			VSL_RNG_METHOD_GAUSSIAN_ICDF, _streamWrappers.at(threadId).get(),
-			_nPerThread, _buffer.data() + begin,
+			static_cast<MKL_INT>(_nPerThread), _buffer.data() + begin,
 			_mean, _stDeviation
 		);
 		if (generationResult != VSL_STATUS_OK) {

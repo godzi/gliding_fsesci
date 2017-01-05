@@ -27,10 +27,14 @@ struct ModelParameters
 	double kT;
 	double MAPsDiffusion ;
 	double MAPstiffness ;
+	double MAPforcesOn;
 	double KINESINstiffness ;
+	double KINESINforcesOn;
 	double vUnloaded ;
 	double omega ;
 	double Fstall ;
+	double kinesinPparam;
+	double forceVelocityOn;
 	double deltaPeriod ;
 	double EtaMT;
 	double dMT ;

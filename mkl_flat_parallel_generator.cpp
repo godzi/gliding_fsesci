@@ -36,7 +36,7 @@ void MklFlatParallelGenerator::generateNumbers()
 		const std::size_t begin = _nPerThread * threadId;
 		const auto generationResult = vdRngUniform(
 			VSL_RNG_METHOD_UNIFORM_STD, _streamWrappers.at(threadId).get(),
-			_nPerThread, _buffer.data() + begin,
+			static_cast<MKL_INT>(_nPerThread), _buffer.data() + begin,
 			_leftBound, _rightBound
 		);
 		if (generationResult != VSL_STATUS_OK) {
