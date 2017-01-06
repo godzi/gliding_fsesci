@@ -178,10 +178,10 @@ public:
 		_kinesinvLoaded.kinesinPparam = _mP.kinesinPparam;
 		_kinesinvLoaded.forceVelocityOn = _mP.forceVelocityOn;
 		/// Initial binding
-		for (double i = 0.0+ _initC.surfaceKINESINstartPoint; i < _initC.surfaceLength ; i = i + _initC.KINESINdistance) {
+		for (double i = 0.0+ _initC.surfaceKINESINstartPoint; i <= _initC.surfaceLength ; i = i + _initC.KINESINdistance) {
 			_unboundKinesins.emplace_back(i);
 		}
-		for (double i = 0.0+ _initC.surfaceMAPstartPoint; i < _initC.surfaceLength ; i = i + _initC.MAPdistance) {
+		for (double i = 0.0+ _initC.surfaceMAPstartPoint; i <= _initC.surfaceLength ; i = i + _initC.MAPdistance) {
 			_unboundMaps.emplace_back(i);
 		}
 		////////////////////////
@@ -226,7 +226,10 @@ public:
 	//double taskStartTime,
 	// rndNumbers must contain 3 * nSteps random numbers
 	void advanceState(unsigned nSteps,  const double* rndNormalNumbers, const double* rndFlatNumbers, MklGaussianParallelGenerator* gaussGenerator, MklFlatParallelGenerator* flatGenerator) {
-		
+
+		std::cout << "MTgamma" << _mP.gammaMT << std::endl;
+		std::cout << "kT" << _mP.kT << std::endl;
+
 		int counterNormalRandomNumber = 0;
 		int counterFlatRandomNumber = 0;
 		
@@ -415,8 +418,12 @@ public:
 			_SummForces = -(_mP.KINESINforcesOn* _state.SummKINESINForces+ _mP.MAPforcesOn* _state.SummMAPForces);
 			
 			////
-			 _state.MTpositionStep= (_sP.timeStep / _mP.gammaMT)*_SummForces +	_mP.thermalNoiseOn*sqrt(2 * kBoltz*_mP.T*_sP.timeStep / _mP.gammaMT) *	takeNormalRandomNumber();
+			 _state.MTpositionStep= (_sP.timeStep / _mP.gammaMT)*_SummForces +	_mP.thermalNoiseOn*sqrt(2.0 * _mP.kT*_sP.timeStep / _mP.gammaMT) *	takeNormalRandomNumber();
 			_state.MTposition = _state.MTposition +  _state.MTpositionStep;
+			///
+			_state.BoundedKinesins=_boundKinesins.size();
+			_state.BoundedMAPs = _boundMaps.size();
+			
 			if (taskIteration %_sP.saveFrequency == 0) {
 				writeStateTolog();
 				
@@ -574,6 +581,7 @@ int main(int argc, char *argv[])
 
 		
 	//}
+
 			std::cout << " end" << std::endl;
 			std::cout << " end" << std::endl;
 }

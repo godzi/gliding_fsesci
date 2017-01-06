@@ -51,6 +51,8 @@ struct SystemState
 	double SummMAPForces;
 	double currentTime;
 	double MTpositionStep;
+	double BoundedKinesins;
+	double BoundedMAPs;
 
 	template <typename F>
 	static void iterateFields(F&& f) {
@@ -59,6 +61,8 @@ struct SystemState
 		f(&SystemState::SummMAPForces, "SummMAPForces");
 		f(&SystemState::currentTime, "currentTime");
 		f(&SystemState::MTpositionStep, "MTpositionStep");
+		f(&SystemState::BoundedKinesins, "BoundedKinesins");
+		f(&SystemState::BoundedMAPs, "BoundedMAPs");
 	}
 };
 
