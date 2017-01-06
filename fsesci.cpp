@@ -227,8 +227,8 @@ public:
 	// rndNumbers must contain 3 * nSteps random numbers
 	void advanceState(unsigned nSteps,  const double* rndNormalNumbers, const double* rndFlatNumbers, MklGaussianParallelGenerator* gaussGenerator, MklFlatParallelGenerator* flatGenerator) {
 
-		std::cout << "MTgamma" << _mP.gammaMT << std::endl;
-		std::cout << "kT" << _mP.kT << std::endl;
+	//	std::cout << "MTgamma" << _mP.gammaMT << std::endl;
+	//	std::cout << "kT" << _mP.kT << std::endl;
 
 		int counterNormalRandomNumber = 0;
 		int counterFlatRandomNumber = 0;
