@@ -15,7 +15,7 @@ void MklFlatParallelGenerator::initialize(double leftBound, double rightBound, s
 	_bufferSize = bufferSize;
 	_threadNum = threadNum;
 	///////////////// If reproducibility from launch to launch is required seed is const, eslse seed must be random
-	MKL_UINT seed = 77777;
+	MKL_UINT seed = __rdtsc();
 	/////////////////
 	for (unsigned i = 0; i < threadNum; i++) {
 		_streamWrappers.emplace_back(VSL_BRNG_MT2203 + i, seed);

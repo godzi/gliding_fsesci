@@ -105,7 +105,7 @@ public:
 	{
 		//
 		//return vUnloaded*(1 - (pow((Force / Fstall) , omega)));
-		return  forceVelocityOn*(vUnloaded / (kinesinPparam + (1 - kinesinPparam)*exp(Force*2.79 / 4.11)))+(1- forceVelocityOn)*vUnloaded;
+		return  forceVelocityOn*(vUnloaded / (kinesinPparam + ((1 - kinesinPparam)*exp(Force*2.79 / 4.11))))+(1.0- forceVelocityOn)*vUnloaded;
 		
 	}
 };
@@ -178,26 +178,26 @@ public:
 		_kinesinvLoaded.kinesinPparam = _mP.kinesinPparam;
 		_kinesinvLoaded.forceVelocityOn = _mP.forceVelocityOn;
 		/// Initial binding
-		for (double i = 0.0+ _initC.surfaceKINESINstartPoint; i < _initC.surfaceLength - _initC.KINESINdistance; i = i + _initC.KINESINdistance) {
+		for (double i = 0.0+ _initC.surfaceKINESINstartPoint; i < _initC.surfaceLength ; i = i + _initC.KINESINdistance) {
 			_unboundKinesins.emplace_back(i);
 		}
-		for (double i = 0.0+ _initC.surfaceMAPstartPoint; i < _initC.surfaceLength - _initC.MAPdistance; i = i + _initC.MAPdistance) {
+		for (double i = 0.0+ _initC.surfaceMAPstartPoint; i < _initC.surfaceLength ; i = i + _initC.MAPdistance) {
 			_unboundMaps.emplace_back(i);
 		}
 		////////////////////////
 		size_t neededFlatBufferSize = _unboundKinesins.size() + 2 * _unboundMaps.size();
-		_kprob = _mP.MAPsDiffusion / (_mP.deltaPeriod*_mP.deltaPeriod);
+		
 		////
 		/// test for binding
 		for (int i = 1; i <= _NumberofMTsites;i++) {
 			
-			_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*((double)i - 1);
+			_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*((double)i - 1.0);
 
 			//std::cout << "_unboundMaps.size() = " << _unboundMaps.size() << std::endl;
 			//std::cout << "iter->_mountCoordinate = " << _unboundMaps.begin()->_mountCoordinate << std::endl;
 			for (auto iter = _unboundMaps.begin(); iter != _unboundMaps.end(); ) {
-		//		 std::cout << "iter->_mountCoordinate = " << iter->_mountCoordinate << std::endl;
-				if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= (_mP.deltaPeriod / 2)) {
+				// std::cout << "iter->_mountCoordinate = " << iter->_mountCoordinate << std::endl;
+				if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= (_mP.deltaPeriod / 2.0)) {
 					_boundMaps.emplace_back(iter->_mountCoordinate, i, iter->_mountCoordinate - _SurfaceDistanceofiSite);
 					iter = _unboundMaps.erase(iter);
 					
@@ -208,7 +208,7 @@ public:
 				}					
 			}
 			for (auto iter = _unboundKinesins.begin(); iter != _unboundKinesins.end(); ) {
-				if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= (_mP.deltaPeriod / 2)) {
+				if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= (_mP.deltaPeriod / 2.0)) {
 					_boundKinesins.emplace_back(iter->_mountCoordinate, i, iter->_mountCoordinate - _SurfaceDistanceofiSite);
 					iter = _unboundKinesins.erase(iter);
 				}
@@ -261,23 +261,24 @@ public:
 		// Sites on MT to be checked for new bindings every iteration
 		int sitestocheck[6] = { 1, 2, 3, _NumberofMTsites-2,_NumberofMTsites-1,_NumberofMTsites };
 		///
-		_state.SummKINESINForces = 0.0;
-		_state.SummMAPForces = 0.0;
+		
 		///
 		/// Code below for single iteration
 		double timeCompute = 0.0;
 		_state.currentTime = 0.0;
 		for (unsigned taskIteration = 0; taskIteration < nSteps; taskIteration++) {
 			_state.currentTime += _sP.timeStep;
-
+			_state.SummKINESINForces = 0.0;
+			_state.SummMAPForces = 0.0;
+			_SummForces = 0.0;
 			
 			
 			if (taskIteration % 500000 == 0) {
 				double procent = 100 * round(100000* (double)taskIteration / (double)nSteps) / 100000;
-				std::cout << procent<< "%" << std::endl;
+				//std::cout << procent<< "%" << std::endl;
 				
-				std::cout << __rdtsc()-timeCompute << std::endl;
-				timeCompute = __rdtsc();
+			//	std::cout << __rdtsc()-timeCompute << std::endl;
+			//	timeCompute = __rdtsc();
 				//std::cout << nst << std::endl;
 			}
 			
@@ -288,10 +289,10 @@ public:
 					/// Test for binding
 				for (int it = 0; it < 6; it++) {
 					int i = sitestocheck[it];
-					_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*((double)i - 1);
+					_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*((double)i - 1.0);
 
 					for (auto iter = _unboundMaps.begin(); iter != _unboundMaps.end(); ) {
-						if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= (_mP.deltaPeriod / 2)) {
+						if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= (_mP.deltaPeriod / 2.0)) {
 							_boundMaps.emplace_back(iter->_mountCoordinate, i, iter->_mountCoordinate - _SurfaceDistanceofiSite);
 							iter = _unboundMaps.erase(iter);
 						}
@@ -301,7 +302,7 @@ public:
 						}
 					}
 					for (auto iter = _unboundKinesins.begin(); iter != _unboundKinesins.end(); ) {
-						if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= (_mP.deltaPeriod / 2)) {
+						if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= (_mP.deltaPeriod / 2.0)) {
 							_boundKinesins.emplace_back(iter->_mountCoordinate, i, iter->_mountCoordinate - _SurfaceDistanceofiSite);
 							iter = _unboundKinesins.erase(iter);
 						}
@@ -315,15 +316,21 @@ public:
 				/// Test for stepping for MT bound MAPs AND UPDATE SPRING EXTENSION LENGTHS
 		
 				for (auto iter = _boundMaps.begin(); iter != _boundMaps.end(); ) {
+					
 					// update spring extensions based on previous microtubule step
 					iter->_springLength = iter->_springLength +  _state.MTpositionStep;
+					//std::cout << "iter->_springLength*_mP.MAPstiffness " << iter->_springLength*_mP.MAPstiffness << std::endl;
 					///
-					double kpow = (-iter->_springLength*_mP.MAPstiffness)*_mP.deltaPeriod / (2 * kBoltz*_mP.T);
-					double kPlus = _kprob*exp(kpow);
-					double kMinus =_kprob*exp(-kpow);
-					if (takeFlatRandomNumber() > exp(-(kMinus + kPlus)*_sP.timeStep)) {
+					_kprob = _mP.MAPsDiffusion / (_mP.deltaPeriod*_mP.deltaPeriod);
+					_kpow = (-iter->_springLength*_mP.MAPstiffness)*_mP.deltaPeriod / (2.0 * kBoltz*_mP.T);
+					_kPlus = _kprob*exp(_kpow);
+					_kMinus =_kprob*exp(-_kpow);
+					
+					if (takeFlatRandomNumber() > exp(-(_kMinus + _kPlus)*_sP.timeStep)) {
+						//std::cout << "_state.MTpositionStep= " << _state.MTpositionStep << std::endl;
+						
 					// Make step
-						if (takeFlatRandomNumber() < kMinus / (kMinus + kPlus)) {
+						if (takeFlatRandomNumber() > (_kPlus / (_kMinus + _kPlus))) {
 						//	Make step to the left
 							if (((iter->_MTsite) - 1) >= 1)
 							{
@@ -332,6 +339,7 @@ public:
 								iter->_springLength = iter->_springLength - _mP.deltaPeriod;
 								// Count new summ forces
 								 _state.SummMAPForces =  _state.SummMAPForces + iter->_springLength*_mP.MAPstiffness;
+								// std::cout << " ((_kMinus + _kPlus)*_sP.timeStep)= " << ((_kMinus + _kPlus)*_sP.timeStep) << std::endl;
 								++iter;
 							}
 							else
@@ -364,8 +372,10 @@ public:
 					}
 					else
 					{
+						_state.SummMAPForces = _state.SummMAPForces + iter->_springLength*_mP.MAPstiffness;
 						++iter;
 					}
+
 				}
 				////
 				/// Test for stepping for MT bound MT kinesins AND UPDATE SPRING EXTENSION LENGTHS
@@ -374,7 +384,7 @@ public:
 					
 					iter->_springLength = iter->_springLength +  _state.MTpositionStep;
 					
-					
+					//std::cout << "iter->_springLength*_mP.KINESINstiffness " << iter->_springLength*_mP.KINESINstiffness << std::endl;
 					//
 					double pstep =exp(-_kinesinvLoaded.calc(fabs(_mP.KINESINstiffness*iter->_springLength))*(_sP.timeStep / (2 * _mP.deltaPeriod)));
 					if (takeFlatRandomNumber() > pstep)
@@ -402,11 +412,10 @@ public:
 				}
 
 		//////
-			double SummForces = (-1)* (_mP.KINESINforcesOn* _state.SummKINESINForces+ _mP.MAPforcesOn* _state.SummMAPForces);
-			 _state.SummKINESINForces = 0.0;
-			 _state.SummMAPForces = 0.0;
+			_SummForces = -(_mP.KINESINforcesOn* _state.SummKINESINForces+ _mP.MAPforcesOn* _state.SummMAPForces);
+			
 			////
-			 _state.MTpositionStep= (_sP.timeStep / _mP.gammaMT)*SummForces +	_mP.thermalNoiseOn*sqrt(2 * kBoltz*_mP.T*_sP.timeStep / _mP.gammaMT) *	takeNormalRandomNumber();
+			 _state.MTpositionStep= (_sP.timeStep / _mP.gammaMT)*_SummForces +	_mP.thermalNoiseOn*sqrt(2 * kBoltz*_mP.T*_sP.timeStep / _mP.gammaMT) *	takeNormalRandomNumber();
 			_state.MTposition = _state.MTposition +  _state.MTpositionStep;
 			if (taskIteration %_sP.saveFrequency == 0) {
 				writeStateTolog();
@@ -442,8 +451,11 @@ private:
 	std::vector <unboundMAP> _unboundMaps;
 	std::vector <boundMAP> _boundMaps;
 	double _SurfaceDistanceofiSite;
-	
-	double _kprob;
+	double _SummForces;
+	double _kprob=0.0;
+	double _kpow=0.0;
+	double _kPlus=0.0;
+	double _kMinus=0.0;
 	
 public:
 	int _testFlatBufferSizeFreq = 10;//iteration beetween tests
@@ -562,6 +574,8 @@ int main(int argc, char *argv[])
 
 		
 	//}
+			std::cout << " end" << std::endl;
+			std::cout << " end" << std::endl;
 }
 
 //std::chrono
