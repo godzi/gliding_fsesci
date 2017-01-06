@@ -168,7 +168,7 @@ public:
 	}
 	size_t initializeState() {
 		_state.MTpositionStep = 0.0;
-		
+	//	_state.MTposition = 0.0;
 		_NumberofMTsites = (int)floor(_initC.MTlength / _mP.deltaPeriod);
 		
 		
@@ -178,12 +178,14 @@ public:
 		_kinesinvLoaded.kinesinPparam = _mP.kinesinPparam;
 		_kinesinvLoaded.forceVelocityOn = _mP.forceVelocityOn;
 		/// Initial binding
-		for (double i = 0.0+ _initC.surfaceKINESINstartPoint; i <= _initC.surfaceLength ; i = i + _initC.KINESINdistance) {
-			_unboundKinesins.emplace_back(i);
+		for (double place = 0.0+ _initC.surfaceKINESINstartPoint; place < _initC.surfaceLength ; place = place + _initC.KINESINdistance) {
+			_unboundKinesins.emplace_back(place);
 		}
-		for (double i = 0.0+ _initC.surfaceMAPstartPoint; i <= _initC.surfaceLength ; i = i + _initC.MAPdistance) {
-			_unboundMaps.emplace_back(i);
+		for (double place = 0.0+ _initC.surfaceMAPstartPoint; place < _initC.surfaceLength ; place = place + _initC.MAPdistance) {
+			_unboundMaps.emplace_back(place);
 		}
+	//	std::cout << "_unboundKinesins.size= " << _unboundKinesins.size() << std::endl;
+	//	std::cout << "_unboundMaps.size= " << _unboundMaps.size() << std::endl;
 		////////////////////////
 		size_t neededFlatBufferSize = _unboundKinesins.size() + 2 * _unboundMaps.size();
 		
@@ -191,13 +193,14 @@ public:
 		/// test for binding
 		for (int i = 1; i <= _NumberofMTsites;i++) {
 			
-			_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*((double)i - 1.0);
+			_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*(static_cast<double>(i) - 1.0);
 
 			//std::cout << "_unboundMaps.size() = " << _unboundMaps.size() << std::endl;
 			//std::cout << "iter->_mountCoordinate = " << _unboundMaps.begin()->_mountCoordinate << std::endl;
 			for (auto iter = _unboundMaps.begin(); iter != _unboundMaps.end(); ) {
-				// std::cout << "iter->_mountCoordinate = " << iter->_mountCoordinate << std::endl;
-				if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= (_mP.deltaPeriod / 2.0)) {
+				// std::cout << "MAPS iter-> = " << iter- _unboundMaps.begin() << std::endl;
+			//	std::cout << i << " "<< iter - _unboundMaps.begin() << " " << iter->_mountCoordinate << " " << _SurfaceDistanceofiSite << " " << ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= (_mP.deltaPeriod / 2.0))  << std::endl;
+				if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= 1.01*(_mP.deltaPeriod / 2.0)) {
 					_boundMaps.emplace_back(iter->_mountCoordinate, i, iter->_mountCoordinate - _SurfaceDistanceofiSite);
 					iter = _unboundMaps.erase(iter);
 					
@@ -208,7 +211,7 @@ public:
 				}					
 			}
 			for (auto iter = _unboundKinesins.begin(); iter != _unboundKinesins.end(); ) {
-				if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= (_mP.deltaPeriod / 2.0)) {
+				if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= 1.01* (_mP.deltaPeriod / 2.0)) {
 					_boundKinesins.emplace_back(iter->_mountCoordinate, i, iter->_mountCoordinate - _SurfaceDistanceofiSite);
 					iter = _unboundKinesins.erase(iter);
 				}
@@ -276,9 +279,9 @@ public:
 			_SummForces = 0.0;
 			
 			
-			if (taskIteration % 500000 == 0) {
+			if (taskIteration % 100000 == 0) {
 				double procent = 100 * round(100000* (double)taskIteration / (double)nSteps) / 100000;
-				//std::cout << procent<< "%" << std::endl;
+				std::cout << procent<< "%" << std::endl;
 				
 			//	std::cout << __rdtsc()-timeCompute << std::endl;
 			//	timeCompute = __rdtsc();
@@ -295,7 +298,7 @@ public:
 					_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*((double)i - 1.0);
 
 					for (auto iter = _unboundMaps.begin(); iter != _unboundMaps.end(); ) {
-						if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= (_mP.deltaPeriod / 2.0)) {
+						if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= 1.01*(_mP.deltaPeriod / 2.0)) {
 							_boundMaps.emplace_back(iter->_mountCoordinate, i, iter->_mountCoordinate - _SurfaceDistanceofiSite);
 							iter = _unboundMaps.erase(iter);
 						}
@@ -305,7 +308,7 @@ public:
 						}
 					}
 					for (auto iter = _unboundKinesins.begin(); iter != _unboundKinesins.end(); ) {
-						if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= (_mP.deltaPeriod / 2.0)) {
+						if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= 1.01*(_mP.deltaPeriod / 2.0)) {
 							_boundKinesins.emplace_back(iter->_mountCoordinate, i, iter->_mountCoordinate - _SurfaceDistanceofiSite);
 							iter = _unboundKinesins.erase(iter);
 						}
