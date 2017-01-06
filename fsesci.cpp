@@ -46,6 +46,8 @@ class BinaryFileLogger
 public:
 	BinaryFileLogger(LoggerParameters loggerParams, double (SystemState::* loggedField), std::string coordinateName):
 		_file{ loggerParams.filepath + loggerParams.name + "_results_" + coordinateName + ".binary", std::ios::binary },
+		
+		//_file{ loggerParams.filepath + loggerParams.name + "_results_" + coordinateName + ".dat", std::ofstream::out },
 		_loggedField{ loggedField }
 	{
 		if (!_file) {
@@ -69,6 +71,9 @@ private:
 			return;
 		}
 		_file.write(reinterpret_cast<const char*>(_buffer.data()), _buffer.size() * sizeof(double));
+		//_file.write(reinterpret_cast<const char*>(_buffer.data()), _buffer.size() * sizeof(double));
+		
+		
 		if (!_file.good()) {
 			throw std::runtime_error{ "not all data was written to file" };
 		};
@@ -162,7 +167,7 @@ public:
 		return (int)ceil(_sP.totalTime / _sP.timeStep);
 	}
 	size_t initializeState() {
-		
+		_state.MTpositionStep = 0.0;
 		
 		_NumberofMTsites = (int)floor(_initC.MTlength / _mP.deltaPeriod);
 		
@@ -261,7 +266,12 @@ public:
 		///
 		/// Code below for single iteration
 		double timeCompute = 0.0;
+		_state.currentTime = 0.0;
 		for (unsigned taskIteration = 0; taskIteration < nSteps; taskIteration++) {
+			_state.currentTime += _sP.timeStep;
+
+			
+			
 			if (taskIteration % 500000 == 0) {
 				double procent = 100 * round(100000* (double)taskIteration / (double)nSteps) / 100000;
 				std::cout << procent<< "%" << std::endl;
@@ -306,7 +316,7 @@ public:
 		
 				for (auto iter = _boundMaps.begin(); iter != _boundMaps.end(); ) {
 					// update spring extensions based on previous microtubule step
-					iter->_springLength = iter->_springLength + _MTpositionStep;
+					iter->_springLength = iter->_springLength +  _state.MTpositionStep;
 					///
 					double kpow = (-iter->_springLength*_mP.MAPstiffness)*_mP.deltaPeriod / (2 * kBoltz*_mP.T);
 					double kPlus = _kprob*exp(kpow);
@@ -362,7 +372,7 @@ public:
 				for (auto iter = _boundKinesins.begin(); iter != _boundKinesins.end(); ) {
 					// update spring extensions based on previous microtubule step
 					
-					iter->_springLength = iter->_springLength + _MTpositionStep;
+					iter->_springLength = iter->_springLength +  _state.MTpositionStep;
 					
 					
 					//
@@ -396,10 +406,11 @@ public:
 			 _state.SummKINESINForces = 0.0;
 			 _state.SummMAPForces = 0.0;
 			////
-			_MTpositionStep= (_sP.timeStep / _mP.gammaMT)*SummForces +	_mP.thermalNoiseOn*sqrt(2 * kBoltz*_mP.T*_sP.timeStep / _mP.gammaMT) *	takeNormalRandomNumber();
-			_state.MTposition = _state.MTposition + _MTpositionStep;
+			 _state.MTpositionStep= (_sP.timeStep / _mP.gammaMT)*SummForces +	_mP.thermalNoiseOn*sqrt(2 * kBoltz*_mP.T*_sP.timeStep / _mP.gammaMT) *	takeNormalRandomNumber();
+			_state.MTposition = _state.MTposition +  _state.MTpositionStep;
 			if (taskIteration %_sP.saveFrequency == 0) {
 				writeStateTolog();
+				
 			}
 		}
 	}
@@ -431,7 +442,7 @@ private:
 	std::vector <unboundMAP> _unboundMaps;
 	std::vector <boundMAP> _boundMaps;
 	double _SurfaceDistanceofiSite;
-	double _MTpositionStep=0.0;
+	
 	double _kprob;
 	
 public:

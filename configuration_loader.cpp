@@ -113,7 +113,8 @@ Configuration assign_config_from_json(Configuration conf, json jsonobj) {
 	}
 	
 	////
-	conf.modelParameters.gammaMT = 2 * 3.14159*conf.modelParameters.EtaMT*conf.initialConditions.MTlength / (log(4 * conf.modelParameters.hMT / conf.modelParameters.dMT));
+	//conf.modelParameters.gammaMT = 2 * 3.14159*conf.modelParameters.EtaMT*conf.initialConditions.MTlength / (log(4 * conf.modelParameters.hMT / conf.modelParameters.dMT));
+	conf.modelParameters.gammaMT = 2.0 * 3.14159*conf.modelParameters.EtaMT*4.0 / (log(4 * conf.modelParameters.hMT / conf.modelParameters.dMT));
 	///
 	return conf;
 }

@@ -49,12 +49,16 @@ struct SystemState
 	double MTposition;
 	double SummKINESINForces;
 	double SummMAPForces;
+	double currentTime;
+	double MTpositionStep;
 
 	template <typename F>
 	static void iterateFields(F&& f) {
 		f(&SystemState::MTposition, "MTposition");
 		f(&SystemState::SummKINESINForces, "SummKINESINForces");
 		f(&SystemState::SummMAPForces, "SummMAPForces");
+		f(&SystemState::currentTime, "currentTime");
+		f(&SystemState::MTpositionStep, "MTpositionStep");
 	}
 };
 
