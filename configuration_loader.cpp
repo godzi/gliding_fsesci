@@ -40,7 +40,11 @@ Configuration assign_config_from_json(Configuration conf, json jsonobj) {
 	}
 	if (!(jsonobj["ModelParameters"]["thermalNoiseOn"].empty())) {
 		conf.modelParameters.thermalNoiseOn = stod(jsonobj["ModelParameters"]["thermalNoiseOn"].get<std::string>());
-	}	
+	}
+	if (!(jsonobj["ModelParameters"]["freeSpringLength"].empty())) {
+		conf.modelParameters.freeSpringLength = stod(jsonobj["ModelParameters"]["freeSpringLength"].get<std::string>());
+	}
+	
 	if (!(jsonobj["ModelParameters"]["MAPsDiffusion"].empty())) {
 		conf.modelParameters.MAPsDiffusion = stod(jsonobj["ModelParameters"]["MAPsDiffusion"].get<std::string>());
 	}

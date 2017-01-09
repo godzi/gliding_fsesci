@@ -27,6 +27,7 @@ struct ModelParameters
 	double T ;
 	double kT;
 	double thermalNoiseOn;
+	double freeSpringLength;
 	double MAPsDiffusion ;
 	double MAPstiffness ;
 	double MAPforcesOn;

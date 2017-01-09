@@ -226,6 +226,20 @@ public:
 	//	std::cout << "_boundMaps.size() = " << _boundMaps.size() << std::endl;
 		return neededFlatBufferSize;
 	}
+	double springForce(double stiffness, double length) {
+		if (fabs(length) <= _mP.freeSpringLength) {
+			return 0.0;
+		}
+		else {
+			if (length >= 0.0) {
+				return stiffness*(length - _mP.freeSpringLength);
+			}
+			if (length < 0.0) {
+				return stiffness*(length + _mP.freeSpringLength);
+			}
+		}
+		
+	}
 	//double taskStartTime,
 	// rndNumbers must contain 3 * nSteps random numbers
 	void advanceState(unsigned nSteps,  const double* rndNormalNumbers, const double* rndFlatNumbers, MklGaussianParallelGenerator* gaussGenerator, MklFlatParallelGenerator* flatGenerator) {
@@ -328,7 +342,7 @@ public:
 					//std::cout << "iter->_springLength*_mP.MAPstiffness " << iter->_springLength*_mP.MAPstiffness << std::endl;
 					///
 					_kprob = _mP.MAPsDiffusion / (_mP.deltaPeriod*_mP.deltaPeriod);
-					_kpow = (-iter->_springLength*_mP.MAPstiffness)*_mP.deltaPeriod / (2.0 * kBoltz*_mP.T);
+					_kpow = (-springForce(_mP.MAPstiffness, iter->_springLength))*_mP.deltaPeriod / (2.0 * kBoltz*_mP.T);
 					_kPlus = _kprob*exp(_kpow);
 					_kMinus =_kprob*exp(-_kpow);
 					
@@ -344,7 +358,7 @@ public:
 								iter->_MTsite = iter->_MTsite - 1;
 								iter->_springLength = iter->_springLength - _mP.deltaPeriod;
 								// Count new summ forces
-								 _state.SummMAPForces =  _state.SummMAPForces + iter->_springLength*_mP.MAPstiffness;
+								 _state.SummMAPForces =  _state.SummMAPForces + springForce(_mP.MAPstiffness, iter->_springLength);
 								// std::cout << " ((_kMinus + _kPlus)*_sP.timeStep)= " << ((_kMinus + _kPlus)*_sP.timeStep) << std::endl;
 								++iter;
 							}
@@ -364,7 +378,7 @@ public:
 								iter->_MTsite = iter->_MTsite + 1;
 								iter->_springLength = iter->_springLength + _mP.deltaPeriod;
 								// Count new summ forces
-								 _state.SummMAPForces =  _state.SummMAPForces + iter->_springLength*_mP.MAPstiffness;
+								 _state.SummMAPForces =  _state.SummMAPForces + springForce(_mP.MAPstiffness, iter->_springLength);
 								++iter;
 							}
 							else
@@ -378,7 +392,7 @@ public:
 					}
 					else
 					{
-						_state.SummMAPForces = _state.SummMAPForces + iter->_springLength*_mP.MAPstiffness;
+						_state.SummMAPForces = _state.SummMAPForces + springForce(_mP.MAPstiffness, iter->_springLength);
 						++iter;
 					}
 
@@ -392,7 +406,7 @@ public:
 					
 					//std::cout << "iter->_springLength*_mP.KINESINstiffness " << iter->_springLength*_mP.KINESINstiffness << std::endl;
 					//
-					double pstep =exp(-_kinesinvLoaded.calc(fabs(_mP.KINESINstiffness*iter->_springLength))*(_sP.timeStep / (2 * _mP.deltaPeriod)));
+					double pstep =exp(-_kinesinvLoaded.calc(fabs(springForce(_mP.KINESINstiffness, iter->_springLength)))*(_sP.timeStep / (2 * _mP.deltaPeriod)));
 					if (takeFlatRandomNumber() > pstep)
 					{
 						//make step (always 2 site periods to the plus end of MT therefore to higher site number)
@@ -401,7 +415,7 @@ public:
 							iter->_MTsite = iter->_MTsite + 2;
 							iter->_springLength = iter->_springLength + 2* _mP.deltaPeriod;
 							// Count new summ forces
-							 _state.SummKINESINForces =  _state.SummKINESINForces + iter->_springLength*_mP.KINESINstiffness;
+							 _state.SummKINESINForces =  _state.SummKINESINForces + springForce(_mP.KINESINstiffness, iter->_springLength);
 							++iter;
 						}
 						else
@@ -412,7 +426,7 @@ public:
 					}
 					else {
 						//
-						 _state.SummKINESINForces =  _state.SummKINESINForces + iter->_springLength*_mP.KINESINstiffness;
+						 _state.SummKINESINForces =  _state.SummKINESINForces + springForce(_mP.KINESINstiffness, iter->_springLength);
 						++iter;
 					}
 				}
