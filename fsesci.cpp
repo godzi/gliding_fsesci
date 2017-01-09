@@ -227,6 +227,8 @@ public:
 		return neededFlatBufferSize;
 	}
 	double springForce(double stiffness, double length) {
+		return stiffness*length;
+		/*
 		if (fabs(length) <= _mP.freeSpringLength) {
 			return 0.0;
 		}
@@ -238,6 +240,7 @@ public:
 				return stiffness*(length + _mP.freeSpringLength);
 			}
 		}
+		*/
 		
 	}
 	//double taskStartTime,
