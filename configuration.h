@@ -31,6 +31,9 @@ struct ModelParameters
 	double MAPsDiffusion ;
 	double MAPstiffness ;
 	double MAPforcesOn;
+	double MAPfsmPar;
+	double MAPunbindBorderFreq;
+	double KinesinunbindBorderFreq;
 	double KINESINstiffness ;
 	double KINESINforcesOn;
 	double vUnloaded ;
@@ -54,6 +57,8 @@ struct SystemState
 	double MTpositionStep;
 	double BoundedKinesins;
 	double BoundedMAPs;
+	double Monitorkinesin;
+	double MonitorMAP;
 
 	template <typename F>
 	static void iterateFields(F&& f) {
@@ -64,6 +69,8 @@ struct SystemState
 		f(&SystemState::MTpositionStep, "MTpositionStep");
 		f(&SystemState::BoundedKinesins, "BoundedKinesins");
 		f(&SystemState::BoundedMAPs, "BoundedMAPs");
+		f(&SystemState::Monitorkinesin, "Monitorkinesin");
+		f(&SystemState::MonitorMAP, "MonitorMAP");
 	}
 };
 

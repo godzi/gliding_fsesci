@@ -345,7 +345,7 @@ public:
 					//std::cout << "iter->_springLength*_mP.MAPstiffness " << iter->_springLength*_mP.MAPstiffness << std::endl;
 					///
 					_kprob = _mP.MAPsDiffusion / (_mP.deltaPeriod*_mP.deltaPeriod);
-					_kpow = (-springForce(_mP.MAPstiffness, iter->_springLength))*_mP.deltaPeriod / (2.0 * kBoltz*_mP.T);
+					_kpow = (-springForce(_mP.MAPstiffness, iter->_springLength))*_mP.MAPfsmPar / ( kBoltz*_mP.T);
 					_kPlus = _kprob*exp(_kpow);
 					_kMinus =_kprob*exp(-_kpow);
 					
@@ -367,8 +367,16 @@ public:
 							}
 							else
 							{
-								_unboundMaps.emplace_back(iter->_mountCoordinate);
-								iter=_boundMaps.erase(iter);
+								if(takeFlatRandomNumber()<=_mP.MAPunbindBorderFreq)
+								{
+									_unboundMaps.emplace_back(iter->_mountCoordinate);
+									iter = _boundMaps.erase(iter);
+								}
+								else
+								{
+									_state.SummMAPForces = _state.SummMAPForces + springForce(_mP.MAPstiffness, iter->_springLength);
+									++iter;
+								}
 
 							}				
 						}
@@ -386,9 +394,16 @@ public:
 							}
 							else
 							{
-								_unboundMaps.emplace_back(iter->_mountCoordinate);
-								iter=_boundMaps.erase(iter);
-
+								if (takeFlatRandomNumber() <= _mP.MAPunbindBorderFreq)
+								{
+									_unboundMaps.emplace_back(iter->_mountCoordinate);
+									iter = _boundMaps.erase(iter);
+								}
+								else
+								{
+									_state.SummMAPForces = _state.SummMAPForces + springForce(_mP.MAPstiffness, iter->_springLength);
+									++iter;
+								}
 							}
 						}
 					
@@ -423,8 +438,16 @@ public:
 						}
 						else
 						{
-							_unboundKinesins.emplace_back(iter->_mountCoordinate);
-							iter=_boundKinesins.erase(iter);
+							if (takeFlatRandomNumber() <= _mP.KinesinunbindBorderFreq)
+							{
+								_unboundKinesins.emplace_back(iter->_mountCoordinate);
+								iter = _boundKinesins.erase(iter);
+							}
+							else
+							{
+								_state.SummKINESINForces = _state.SummKINESINForces + springForce(_mP.KINESINstiffness, iter->_springLength);
+								++iter;
+							}
 						}
 					}
 					else {

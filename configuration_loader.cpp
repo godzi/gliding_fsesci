@@ -87,7 +87,15 @@ Configuration assign_config_from_json(Configuration conf, json jsonobj) {
 	if (!(jsonobj["ModelParameters"]["hMT"].empty())) {
 		conf.modelParameters.hMT = stod(jsonobj["ModelParameters"]["hMT"].get<std::string>());
 	}
-	
+	if (!(jsonobj["ModelParameters"]["MAPfsmPar"].empty())) {
+		conf.modelParameters.MAPfsmPar = stod(jsonobj["ModelParameters"]["MAPfsmPar"].get<std::string>());
+	}
+	if (!(jsonobj["ModelParameters"]["MAPunbindBorderFreq"].empty())) {
+		conf.modelParameters.MAPunbindBorderFreq = stod(jsonobj["ModelParameters"]["MAPunbindBorderFreq"].get<std::string>());
+	}
+	if (!(jsonobj["ModelParameters"]["KinesinunbindBorderFreq"].empty())) {
+		conf.modelParameters.KinesinunbindBorderFreq = stod(jsonobj["ModelParameters"]["KinesinunbindBorderFreq"].get<std::string>());
+	}
 	//// Assign Initial Conditions from json
 	if (!(jsonobj["InitialConditions"]["MAPdistance"].empty())) {
 		conf.initialConditions.MAPdistance = stod(jsonobj["InitialConditions"]["MAPdistance"].get<std::string>());
