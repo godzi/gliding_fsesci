@@ -28,6 +28,7 @@
 #include "configuration_loader.h"
 #include "mkl_gaussian_parallel_generator.h"
 #include "mkl_flat_parallel_generator.h"
+#include "binary_file_logger.h"
 
 #include <fstream>
 
@@ -41,50 +42,7 @@ const double kBoltz= 1.38064852e-5;// (*pN um *)
 
 /// ToDo try to use ofstream rawwrite
 
-class BinaryFileLogger 
-{
-public:
-	BinaryFileLogger(LoggerParameters loggerParams, double (SystemState::* loggedField), std::string coordinateName):
-		_file{ loggerParams.filepath + loggerParams.name + "_results_" + coordinateName + ".binary", std::ios::binary },
-		
-		//_file{ loggerParams.filepath + loggerParams.name + "_results_" + coordinateName + ".dat", std::ofstream::out },
-		_loggedField{ loggedField }
-	{
-		if (!_file) {
-			throw std::runtime_error{ "the file was not created" };
-		}
-		_buffer.reserve(_buffsize);
-	}
-	~BinaryFileLogger() {
-		flush();
-	}
-	void save(const SystemState* systemState) {
-		_buffer.push_back(systemState->*_loggedField);
-		if (_buffer.size() == _buffsize) {
-			flush();
-		}
-	}
 
-private:
-	void flush() {
-		if (_buffer.empty()) {
-			return;
-		}
-		_file.write(reinterpret_cast<const char*>(_buffer.data()), _buffer.size() * sizeof(double));
-		//_file.write(reinterpret_cast<const char*>(_buffer.data()), _buffer.size() * sizeof(double));
-		
-		
-		if (!_file.good()) {
-			throw std::runtime_error{ "not all data was written to file" };
-		};
-		_buffer.clear();
-	}
-
-	static constexpr std::size_t _buffsize = 4096 / sizeof(double);
-	std::ofstream _file;
-	double(SystemState::* _loggedField);
-	std::vector <double> _buffer;
-};
 
 
 ///
@@ -155,12 +113,14 @@ public:
 		_state( configuration.initialConditions.initialState )
 	{
 		const auto& loggerParameters = configuration.loggerParameters;
-		SystemState::iterateFields([this, &loggerParameters] (double(SystemState::* field), std::string fieldName) {
+		auto callback = [this, &loggerParameters](double(SystemState::* field), std::string fieldName) {
 			auto logger = std::make_unique<BinaryFileLogger>(loggerParameters, field, fieldName);// creates object of class BinaryFileLogger but returns to logger variable the unique pointer to it. // for creation of object implicitly with arguments like this also remind yourself the vector.emplace(args) .
 			this->_loggers.push_back(std::move(logger));// unique pointer can't be copied, only moved like this
-		});
-
-		
+		};
+		SystemState::iterateFields(callback);
+		//logger for kinesin sites on MT
+		//auto logger = std::make_unique<BinaryFileLogger>(loggerParameters, field, fieldName);
+		//logger for MAP sites on MT
 
 	}
 	int countTotalSteps() {
@@ -506,6 +466,7 @@ private:
 	double _kpow=0.0;
 	double _kPlus=0.0;
 	double _kMinus=0.0;
+
 	
 public:
 	int _testFlatBufferSizeFreq = 10;//iteration beetween tests

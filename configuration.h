@@ -60,17 +60,17 @@ struct SystemState
 	double Monitorkinesin;
 	double MonitorMAP;
 
-	template <typename F>
-	static void iterateFields(F&& f) {
-		f(&SystemState::MTposition, "MTposition");
-		f(&SystemState::SummKINESINForces, "SummKINESINForces");
-		f(&SystemState::SummMAPForces, "SummMAPForces");
-		f(&SystemState::currentTime, "currentTime");
-		f(&SystemState::MTpositionStep, "MTpositionStep");
-		f(&SystemState::BoundedKinesins, "BoundedKinesins");
-		f(&SystemState::BoundedMAPs, "BoundedMAPs");
-		f(&SystemState::Monitorkinesin, "Monitorkinesin");
-		f(&SystemState::MonitorMAP, "MonitorMAP");
+	template <typename Callback>
+	static void iterateFields(Callback&& callback) {
+		callback(&SystemState::MTposition, "MTposition");
+		callback(&SystemState::SummKINESINForces, "SummKINESINForces");
+		callback(&SystemState::SummMAPForces, "SummMAPForces");
+		callback(&SystemState::currentTime, "currentTime");
+		callback(&SystemState::MTpositionStep, "MTpositionStep");
+		callback(&SystemState::BoundedKinesins, "BoundedKinesins");
+		callback(&SystemState::BoundedMAPs, "BoundedMAPs");
+		callback(&SystemState::Monitorkinesin, "Monitorkinesin");
+		callback(&SystemState::MonitorMAP, "MonitorMAP");
 	}
 };
 
