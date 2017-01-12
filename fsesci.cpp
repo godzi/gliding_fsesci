@@ -128,6 +128,17 @@ public:
 	int countTotalSteps() {
 		return (int)ceil(_sP.totalTime / _sP.timeStep);
 	}
+	void saveStepingMap(double time, double proteinMountCoordinate,int MTsiteNum ) {
+		if ((fabs(proteinMountCoordinate - _state.MonitorMAP)) <= _initC.MAPdistance / 2) {
+			_MAPStepsLog.save(std::to_string(time) + "	" + std::to_string(proteinMountCoordinate) + "	" + std::to_string(MTsiteNum) + "\n");
+		}
+	}
+	void saveStepingKinesin(double time, double proteinMountCoordinate, int MTsiteNum) {
+		if ((fabs(proteinMountCoordinate - _state.Monitorkinesin)) <= _initC.KINESINdistance / 2) {
+			_kinesinStepsLog.save(std::to_string(time) + "	" + std::to_string(proteinMountCoordinate) + "	" + std::to_string(MTsiteNum) + "\n");
+		}
+	}
+
 	size_t initializeState() {
 		_state.MTpositionStep = 0.0;
 	//	_state.MTposition = 0.0;
@@ -164,7 +175,7 @@ public:
 			//	std::cout << i << " "<< iter - _unboundMaps.begin() << " " << iter->_mountCoordinate << " " << _SurfaceDistanceofiSite << " " << ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= (_mP.deltaPeriod / 2.0))  << std::endl;
 				if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= 1.01*(_mP.deltaPeriod / 2.0)) {
 					_boundMaps.emplace_back(iter->_mountCoordinate, i, iter->_mountCoordinate - _SurfaceDistanceofiSite);
-					_MAPStepsLog.save(std::to_string(0.0) + "	" + std::to_string(iter->_mountCoordinate) + "	" + std::to_string(i) + "\n");
+					saveStepingMap(0.0, iter->_mountCoordinate,i);
 					iter = _unboundMaps.erase(iter);
 					
 				}
@@ -176,7 +187,7 @@ public:
 			for (auto iter = _unboundKinesins.begin(); iter != _unboundKinesins.end(); ) {
 				if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= 1.01* (_mP.deltaPeriod / 2.0)) {
 					_boundKinesins.emplace_back(iter->_mountCoordinate, i, iter->_mountCoordinate - _SurfaceDistanceofiSite);
-					_kinesinStepsLog.save(std::to_string(0.0) + "	" + std::to_string(iter->_mountCoordinate) + "	" + std::to_string(i) + "\n");
+					saveStepingKinesin(0.0, iter->_mountCoordinate, i);
 					iter = _unboundKinesins.erase(iter);
 					
 				}
@@ -282,7 +293,7 @@ public:
 					for (auto iter = _unboundMaps.begin(); iter != _unboundMaps.end(); ) {
 						if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= 1.01*(_mP.deltaPeriod / 2.0)) {
 							_boundMaps.emplace_back(iter->_mountCoordinate, i, iter->_mountCoordinate - _SurfaceDistanceofiSite);
-							_MAPStepsLog.save(std::to_string(_state.currentTime) + "	" + std::to_string(iter->_mountCoordinate) + "	" + std::to_string(i) + "\n");
+							saveStepingMap(_state.currentTime, iter->_mountCoordinate, i);
 							iter = _unboundMaps.erase(iter);
 							//
 							
@@ -295,7 +306,7 @@ public:
 					for (auto iter = _unboundKinesins.begin(); iter != _unboundKinesins.end(); ) {
 						if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= 1.01*(_mP.deltaPeriod / 2.0)) {
 							_boundKinesins.emplace_back(iter->_mountCoordinate, i, iter->_mountCoordinate - _SurfaceDistanceofiSite);
-							_kinesinStepsLog.save(std::to_string(_state.currentTime) + "	" + std::to_string(iter->_mountCoordinate) + "	" + std::to_string(i) + "\n");
+							saveStepingKinesin(_state.currentTime, iter->_mountCoordinate, i);
 							iter = _unboundKinesins.erase(iter);
 							//
 							
@@ -332,7 +343,8 @@ public:
 								iter->_MTsite = iter->_MTsite - 1;
 								iter->_springLength = iter->_springLength - _mP.deltaPeriod;
 								//
-								_MAPStepsLog.save(std::to_string(_state.currentTime) + "	" + std::to_string(iter->_mountCoordinate) + "	" + std::to_string(iter->_MTsite) + "\n");
+								saveStepingMap(_state.currentTime, iter->_mountCoordinate, iter->_MTsite);
+								
 								// Count new summ forces
 								 _state.SummMAPForces =  _state.SummMAPForces + springForce(_mP.MAPstiffness, iter->_springLength);
 								// std::cout << " ((_kMinus + _kPlus)*_sP.timeStep)= " << ((_kMinus + _kPlus)*_sP.timeStep) << std::endl;
@@ -362,7 +374,8 @@ public:
 								iter->_MTsite = iter->_MTsite + 1;
 								iter->_springLength = iter->_springLength + _mP.deltaPeriod;
 								//
-								_MAPStepsLog.save(std::to_string(_state.currentTime) + "	" + std::to_string(iter->_mountCoordinate) + "	" + std::to_string(iter->_MTsite) + "\n");
+								saveStepingMap(_state.currentTime, iter->_mountCoordinate, iter->_MTsite);
+
 								// Count new summ forces
 								 _state.SummMAPForces =  _state.SummMAPForces + springForce(_mP.MAPstiffness, iter->_springLength);
 								++iter;
@@ -409,8 +422,8 @@ public:
 							iter->_springLength = iter->_springLength + 2* _mP.deltaPeriod;
 							//
 							
-							_kinesinStepsLog.save(std::to_string(_state.currentTime) + "	" + std::to_string(iter->_mountCoordinate)  + "	" + std::to_string(iter->_MTsite)+"\n");
-
+							
+							saveStepingKinesin(_state.currentTime, iter->_mountCoordinate, iter->_MTsite);
 							// Count new summ forces
 							 _state.SummKINESINForces =  _state.SummKINESINForces + springForce(_mP.KINESINstiffness, iter->_springLength);
 							++iter;
