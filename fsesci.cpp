@@ -164,6 +164,7 @@ public:
 			//	std::cout << i << " "<< iter - _unboundMaps.begin() << " " << iter->_mountCoordinate << " " << _SurfaceDistanceofiSite << " " << ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= (_mP.deltaPeriod / 2.0))  << std::endl;
 				if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= 1.01*(_mP.deltaPeriod / 2.0)) {
 					_boundMaps.emplace_back(iter->_mountCoordinate, i, iter->_mountCoordinate - _SurfaceDistanceofiSite);
+					_MAPStepsLog.save(std::to_string(0.0) + "	" + std::to_string(iter->_mountCoordinate) + "	" + std::to_string(i) + "\n");
 					iter = _unboundMaps.erase(iter);
 					
 				}
@@ -175,7 +176,9 @@ public:
 			for (auto iter = _unboundKinesins.begin(); iter != _unboundKinesins.end(); ) {
 				if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= 1.01* (_mP.deltaPeriod / 2.0)) {
 					_boundKinesins.emplace_back(iter->_mountCoordinate, i, iter->_mountCoordinate - _SurfaceDistanceofiSite);
+					_kinesinStepsLog.save(std::to_string(0.0) + "	" + std::to_string(iter->_mountCoordinate) + "	" + std::to_string(i) + "\n");
 					iter = _unboundKinesins.erase(iter);
+					
 				}
 				else
 				{
@@ -279,7 +282,10 @@ public:
 					for (auto iter = _unboundMaps.begin(); iter != _unboundMaps.end(); ) {
 						if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= 1.01*(_mP.deltaPeriod / 2.0)) {
 							_boundMaps.emplace_back(iter->_mountCoordinate, i, iter->_mountCoordinate - _SurfaceDistanceofiSite);
+							_MAPStepsLog.save(std::to_string(_state.currentTime) + "	" + std::to_string(iter->_mountCoordinate) + "	" + std::to_string(i) + "\n");
 							iter = _unboundMaps.erase(iter);
+							//
+							
 						}
 						else
 						{
@@ -289,7 +295,10 @@ public:
 					for (auto iter = _unboundKinesins.begin(); iter != _unboundKinesins.end(); ) {
 						if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= 1.01*(_mP.deltaPeriod / 2.0)) {
 							_boundKinesins.emplace_back(iter->_mountCoordinate, i, iter->_mountCoordinate - _SurfaceDistanceofiSite);
+							_kinesinStepsLog.save(std::to_string(_state.currentTime) + "	" + std::to_string(iter->_mountCoordinate) + "	" + std::to_string(i) + "\n");
 							iter = _unboundKinesins.erase(iter);
+							//
+							
 						}
 						else
 						{
@@ -322,6 +331,8 @@ public:
 							//test that we still have the site there
 								iter->_MTsite = iter->_MTsite - 1;
 								iter->_springLength = iter->_springLength - _mP.deltaPeriod;
+								//
+								_MAPStepsLog.save(std::to_string(_state.currentTime) + "	" + std::to_string(iter->_mountCoordinate) + "	" + std::to_string(iter->_MTsite) + "\n");
 								// Count new summ forces
 								 _state.SummMAPForces =  _state.SummMAPForces + springForce(_mP.MAPstiffness, iter->_springLength);
 								// std::cout << " ((_kMinus + _kPlus)*_sP.timeStep)= " << ((_kMinus + _kPlus)*_sP.timeStep) << std::endl;
@@ -350,6 +361,8 @@ public:
 								//test that we still have the site there
 								iter->_MTsite = iter->_MTsite + 1;
 								iter->_springLength = iter->_springLength + _mP.deltaPeriod;
+								//
+								_MAPStepsLog.save(std::to_string(_state.currentTime) + "	" + std::to_string(iter->_mountCoordinate) + "	" + std::to_string(iter->_MTsite) + "\n");
 								// Count new summ forces
 								 _state.SummMAPForces =  _state.SummMAPForces + springForce(_mP.MAPstiffness, iter->_springLength);
 								++iter;
