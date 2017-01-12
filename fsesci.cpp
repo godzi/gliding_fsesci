@@ -29,6 +29,7 @@
 #include "mkl_gaussian_parallel_generator.h"
 #include "mkl_flat_parallel_generator.h"
 #include "binary_file_logger.h"
+#include "dat_file_logger.h"
 
 #include <fstream>
 
@@ -110,7 +111,9 @@ public:
 		_sP( simulationParameters ),
 		_mP( configuration.modelParameters ),
 		_initC( configuration.initialConditions ),
-		_state( configuration.initialConditions.initialState )
+		_state( configuration.initialConditions.initialState ),
+		_kinesinStepsLog{ configuration.loggerParameters, "kinesinstepslog" },
+		_MAPStepsLog{ configuration.loggerParameters, "mapstepslog" }
 	{
 		const auto& loggerParameters = configuration.loggerParameters;
 		auto callback = [this, &loggerParameters](double(SystemState::* field), std::string fieldName) {
@@ -118,9 +121,8 @@ public:
 			this->_loggers.push_back(std::move(logger));// unique pointer can't be copied, only moved like this
 		};
 		SystemState::iterateFields(callback);
-		//logger for kinesin sites on MT
-		//auto logger = std::make_unique<BinaryFileLogger>(loggerParameters, field, fieldName);
-		//logger for MAP sites on MT
+		
+		
 
 	}
 	int countTotalSteps() {
@@ -392,6 +394,10 @@ public:
 						{
 							iter->_MTsite = iter->_MTsite + 2;
 							iter->_springLength = iter->_springLength + 2* _mP.deltaPeriod;
+							//
+							
+							_kinesinStepsLog.save(std::to_string(_state.currentTime) + "	" + std::to_string(iter->_mountCoordinate)  + "	" + std::to_string(iter->_MTsite))+"\n";
+
 							// Count new summ forces
 							 _state.SummKINESINForces =  _state.SummKINESINForces + springForce(_mP.KINESINstiffness, iter->_springLength);
 							++iter;
@@ -466,8 +472,8 @@ private:
 	double _kpow=0.0;
 	double _kPlus=0.0;
 	double _kMinus=0.0;
-
-	
+	DatFileLogger _kinesinStepsLog;
+	DatFileLogger _MAPStepsLog;
 public:
 	int _testFlatBufferSizeFreq = 10;//iteration beetween tests
 	int _testGaussBufferSizeFreq = 10000;
