@@ -396,7 +396,7 @@ public:
 							iter->_springLength = iter->_springLength + 2* _mP.deltaPeriod;
 							//
 							
-							_kinesinStepsLog.save(std::to_string(_state.currentTime) + "	" + std::to_string(iter->_mountCoordinate)  + "	" + std::to_string(iter->_MTsite))+"\n";
+							_kinesinStepsLog.save(std::to_string(_state.currentTime) + "	" + std::to_string(iter->_mountCoordinate)  + "	" + std::to_string(iter->_MTsite)+"\n");
 
 							// Count new summ forces
 							 _state.SummKINESINForces =  _state.SummKINESINForces + springForce(_mP.KINESINstiffness, iter->_springLength);
@@ -495,7 +495,7 @@ int main(int argc, char *argv[])
 	
 	std::string inputparamfile;
 	inputparamfile.append(param_input_filename);
-	
+	//inputparamfile = "C:\\Users\\Tolya\\Documents\\Visual Studio 2015\\Projects\\gliding_fsesci\\x64\\Release\\NewConfig.json";
 	
 	// Create and load simulation parameters and configuration, values are taken from json file
 	const auto simulationParameters = load_simulationparams(inputparamfile);
