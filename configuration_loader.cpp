@@ -119,6 +119,13 @@ Configuration assign_config_from_json(Configuration conf, json jsonobj) {
 		conf.initialConditions.surfaceKINESINstartPoint= stod(jsonobj["InitialConditions"]["surfaceKINESINstartPoint"].get<std::string>());
 	}
 
+	if (!(jsonobj["InitialConditions"]["Monitorkinesin"].empty())) {
+		conf.initialConditions.initialState.Monitorkinesin = stod(jsonobj["InitialConditions"]["Monitorkinesin"].get<std::string>());
+	}
+	if (!(jsonobj["InitialConditions"]["MonitorMAP"].empty())) {
+		conf.initialConditions.initialState.MonitorMAP = stod(jsonobj["InitialConditions"]["MonitorMAP"].get<std::string>());
+	}
+
 	//// Assign Dynamic Coordinates from json initial conditions
 	if (!(jsonobj["InitialConditions"]["MTposition"].empty())) {
 		conf.currentState.MTposition = stod(jsonobj["InitialConditions"]["MTposition"].get<std::string>());
