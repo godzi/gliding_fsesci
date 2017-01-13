@@ -129,17 +129,19 @@ public:
 		return (int)ceil(_sP.totalTime / _sP.timeStep);
 	}
 	void saveStepingMap(double time, double proteinMountCoordinate,int MTsiteNum ) {
-		if ((fabs(proteinMountCoordinate - _state.MonitorMAP)) <= _initC.MAPdistance / 2) {
+	//	std::cout << proteinMountCoordinate << " " << _initC.MonitorMAP << std::endl;
+		if ((fabs(proteinMountCoordinate - _initC.MonitorMAP)) <= _initC.MAPdistance / 2) {
 			_MAPStepsLog.save(std::to_string(time) + "	" + std::to_string(proteinMountCoordinate) + "	" + std::to_string(MTsiteNum) + "\n");
 		}
 	}
 	void saveStepingKinesin(double time, double proteinMountCoordinate, int MTsiteNum) {
-		if ((fabs(proteinMountCoordinate - _state.Monitorkinesin)) <= _initC.KINESINdistance / 2) {
+		if ((fabs(proteinMountCoordinate - _initC.Monitorkinesin)) <= _initC.KINESINdistance / 2) {
 			_kinesinStepsLog.save(std::to_string(time) + "	" + std::to_string(proteinMountCoordinate) + "	" + std::to_string(MTsiteNum) + "\n");
 		}
 	}
 
 	size_t initializeState() {
+	
 		_state.MTpositionStep = 0.0;
 	//	_state.MTposition = 0.0;
 		_NumberofMTsites = (int)floor(_initC.MTlength / _mP.deltaPeriod);

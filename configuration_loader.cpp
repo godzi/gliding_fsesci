@@ -120,10 +120,10 @@ Configuration assign_config_from_json(Configuration conf, json jsonobj) {
 	}
 
 	if (!(jsonobj["InitialConditions"]["Monitorkinesin"].empty())) {
-		conf.initialConditions.initialState.Monitorkinesin = stod(jsonobj["InitialConditions"]["Monitorkinesin"].get<std::string>());
+		conf.initialConditions.Monitorkinesin = stod(jsonobj["InitialConditions"]["Monitorkinesin"].get<std::string>());
 	}
 	if (!(jsonobj["InitialConditions"]["MonitorMAP"].empty())) {
-		conf.initialConditions.initialState.MonitorMAP = stod(jsonobj["InitialConditions"]["MonitorMAP"].get<std::string>());
+		conf.initialConditions.MonitorMAP = stod(jsonobj["InitialConditions"]["MonitorMAP"].get<std::string>());
 	}
 
 	//// Assign Dynamic Coordinates from json initial conditions

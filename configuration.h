@@ -57,8 +57,7 @@ struct SystemState
 	double MTpositionStep;
 	double BoundedKinesins;
 	double BoundedMAPs;
-	double Monitorkinesin;
-	double MonitorMAP;
+	
 
 	template <typename Callback>
 	static void iterateFields(Callback&& callback) {
@@ -69,8 +68,6 @@ struct SystemState
 		callback(&SystemState::MTpositionStep, "MTpositionStep");
 		callback(&SystemState::BoundedKinesins, "BoundedKinesins");
 		callback(&SystemState::BoundedMAPs, "BoundedMAPs");
-		callback(&SystemState::Monitorkinesin, "Monitorkinesin");
-		callback(&SystemState::MonitorMAP, "MonitorMAP");
 	}
 };
 
@@ -83,6 +80,8 @@ struct InitialConditions
 	double MTlength;
 	double surfaceKINESINstartPoint;
 	double surfaceMAPstartPoint;
+	double Monitorkinesin;
+	double MonitorMAP;
 	
 };
 // Composition of parameters
