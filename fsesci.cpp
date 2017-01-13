@@ -260,7 +260,8 @@ public:
 
 
 		// Sites on MT to be checked for new bindings every iteration
-		int sitestocheck[6] = { 1, 2, 3, _NumberofMTsites-2,_NumberofMTsites-1,_NumberofMTsites };
+		//int sitestocheck[6] = { 1, 2, 3, _NumberofMTsites-2,_NumberofMTsites-1,_NumberofMTsites };
+		int sitestocheck[18] = { 1, 2, 3,4,5,6,7,8,9, _NumberofMTsites - 8,_NumberofMTsites - 7,_NumberofMTsites-6, _NumberofMTsites - 5,_NumberofMTsites - 4,_NumberofMTsites - 3,_NumberofMTsites - 2,_NumberofMTsites - 1,_NumberofMTsites - 0};
 		///
 		
 		///
@@ -288,11 +289,13 @@ public:
 			//takeFlatRandomNumber();
 
 					/// Test for binding
-				for (int it = 0; it < 6; it++) {
+				//for (int it = 0; it < 6; it++) {
+				for (int it = 0; it < 18; it++) {
 					int i = sitestocheck[it];
 					_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*((double)i - 1.0);
 
 					for (auto iter = _unboundMaps.begin(); iter != _unboundMaps.end(); ) {
+						
 						if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= 1.01*(_mP.deltaPeriod / 2.0)) {
 							_boundMaps.emplace_back(iter->_mountCoordinate, i, iter->_mountCoordinate - _SurfaceDistanceofiSite);
 							saveStepingMap(_state.currentTime, iter->_mountCoordinate, i);
