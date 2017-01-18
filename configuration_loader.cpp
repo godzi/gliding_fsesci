@@ -125,7 +125,20 @@ Configuration assign_config_from_json(Configuration conf, json jsonobj) {
 	if (!(jsonobj["InitialConditions"]["MonitorMAP"].empty())) {
 		conf.initialConditions.MonitorMAP = stod(jsonobj["InitialConditions"]["MonitorMAP"].get<std::string>());
 	}
-
+	
+	if (!(jsonobj["InitialConditions"]["watchMAPs"].empty())) {
+		conf.initialConditions.watchMAPs = stod(jsonobj["InitialConditions"]["watchMAPs"].get<std::string>());
+	}
+	if (!(jsonobj["InitialConditions"]["watchMAPs"].empty())) {
+		conf.initialConditions.watchMAPs = stod(jsonobj["InitialConditions"]["watchMAPs"].get<std::string>());
+	}
+	if (!(jsonobj["InitialConditions"]["watchKinesins"].empty())) {
+		conf.initialConditions.watchKinesins = stod(jsonobj["InitialConditions"]["watchKinesins"].get<std::string>());
+	}
+	if (!(jsonobj["InitialConditions"]["fulllogMAPsKinesins"].empty())) {
+		conf.initialConditions.fulllogMAPsKinesins = stod(jsonobj["InitialConditions"]["fulllogMAPsKinesins"].get<std::string>());
+	}
+	
 	//// Assign Dynamic Coordinates from json initial conditions
 	if (!(jsonobj["InitialConditions"]["MTposition"].empty())) {
 		conf.currentState.MTposition = stod(jsonobj["InitialConditions"]["MTposition"].get<std::string>());

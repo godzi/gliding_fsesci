@@ -82,6 +82,9 @@ struct InitialConditions
 	double surfaceMAPstartPoint;
 	double Monitorkinesin;
 	double MonitorMAP;
+	double watchMAPs;
+	double watchKinesins;
+	double fulllogMAPsKinesins;
 	
 };
 // Composition of parameters
