@@ -173,10 +173,12 @@ public:
 		
 		////
 		/// test for binding
-	/*	
+		/*
+		double sitenum;
 		for (auto iter = _unboundMaps.begin(); iter != _unboundMaps.end(); ) {
 			_MTsystemCoordinate = iter->_mountCoordinate - _state.MTposition;
-			if ((_MTsystemCoordinate < 0.5*_mP.deltaPeriod) || (_MTsystemCoordinate > double(_NumberofMTsites - 1)*0.5*_mP.deltaPeriod))
+			
+			if ((_MTsystemCoordinate < -0.5*_mP.deltaPeriod) || (_MTsystemCoordinate > (double(_NumberofMTsites) - 0.5)*_mP.deltaPeriod))
 			{
 				++iter;
 			}
@@ -185,7 +187,7 @@ public:
 
 
 				_fractpart = modf(((_MTsystemCoordinate + 0.5*_mP.deltaPeriod) / _mP.deltaPeriod), &_intpart);
-				int sitenum = _intpart + 1.0;
+				sitenum = _intpart + 1.0;
 				_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*(sitenum - 1.0);
 
 
@@ -200,7 +202,7 @@ public:
 		// Test for kinesin binding
 		for (auto iter = _unboundKinesins.begin(); iter != _unboundKinesins.end(); ) {
 			_MTsystemCoordinate = iter->_mountCoordinate - _state.MTposition;
-			if ((_MTsystemCoordinate < 0.5*_mP.deltaPeriod) || (_MTsystemCoordinate > double(_NumberofMTsites - 1)*0.5*_mP.deltaPeriod))
+			if ((_MTsystemCoordinate < -0.5*_mP.deltaPeriod) || (_MTsystemCoordinate >(double(_NumberofMTsites) - 0.5)*_mP.deltaPeriod))
 			{
 				++iter;
 			}
@@ -209,7 +211,7 @@ public:
 
 
 				_fractpart = modf(((_MTsystemCoordinate + 0.5*_mP.deltaPeriod) / _mP.deltaPeriod), &_intpart);
-				int sitenum = _intpart + 1.0;
+				sitenum = _intpart + 1.0;
 				_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*(sitenum - 1.0);
 
 
@@ -221,8 +223,8 @@ public:
 
 			}
 		}
-
 		*/
+		
 
 		/// test for binding
 		for (int i = 1; i <= _NumberofMTsites; i++) {
@@ -259,6 +261,7 @@ public:
 			}
 
 		}
+		
 	//	std::cout << "_boundKinesins.size() = " << _boundKinesins.size() << std::endl;
 	//	std::cout << "_boundMaps.size() = " << _boundMaps.size() << std::endl;
 		return neededFlatBufferSize;
@@ -397,6 +400,12 @@ public:
 
 						}
 					}
+					//Update spring liength for kinesins (not to do it in stepping or unbinding)
+					for (auto iter = _boundKinesins.begin(); iter != _boundKinesins.end(); )
+					{
+						iter->_springLength = iter->_springLength + _state.MTpositionStep;
+						++iter;
+					}
 
 				// Test for kinesin unbinding
 					if (_initC.kinesinUnbinding==1.0)
@@ -404,7 +413,7 @@ public:
 						for (auto iter = _boundKinesins.begin(); iter != _boundKinesins.end(); ) {
 							// update spring extensions based on previous microtubule step
 
-							iter->_springLength = iter->_springLength + _state.MTpositionStep;
+						
 							_KinesinunbindProbability = 1 / (_mP.kinesinForceUnbindingA*exp(-fabs(iter->_springLength*_mP.KINESINstiffness / _mP.kinesinForceUnbindingFd)));
 
 							if (takeFlatRandomNumber() > exp((-(_KinesinunbindProbability)*_sP.timeStep)))
@@ -511,11 +520,11 @@ public:
 				for (auto iter = _boundKinesins.begin(); iter != _boundKinesins.end(); ) {
 					// update spring extensions based on previous microtubule step
 					
-					iter->_springLength = iter->_springLength +  _state.MTpositionStep;
+					
 					
 					//std::cout << "iter->_springLength*_mP.KINESINstiffness " << iter->_springLength*_mP.KINESINstiffness << std::endl;
 					//
-					double pstep =exp(-_kinesinvLoaded.calc(fabs(springForce(_mP.KINESINstiffness, iter->_springLength)))*(_sP.timeStep / (2 * _mP.deltaPeriod)));
+					double pstep =exp(-_kinesinvLoaded.calc((springForce(_mP.KINESINstiffness, iter->_springLength)))*(_sP.timeStep / (2 * _mP.deltaPeriod)));
 					if (takeFlatRandomNumber() > pstep)
 					{
 						//make step (always 2 site periods to the plus end of MT therefore to higher site number)
