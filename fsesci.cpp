@@ -363,25 +363,27 @@ public:
 					}
 
 				// Test for kinesin unbinding
-					for (auto iter = _boundKinesins.begin(); iter != _boundKinesins.end(); ) {
-						// update spring extensions based on previous microtubule step
+					if (_initC.kinesinUnbinding==1.0)
+					{
+						for (auto iter = _boundKinesins.begin(); iter != _boundKinesins.end(); ) {
+							// update spring extensions based on previous microtubule step
 
-						iter->_springLength = iter->_springLength + _state.MTpositionStep;
-						_KinesinunbindProbability = 1 / (_mP.kinesinForceUnbindingA*exp(-fabs(iter->_springLength*_mP.KINESINstiffness / _mP.kinesinForceUnbindingFd)));
+							iter->_springLength = iter->_springLength + _state.MTpositionStep;
+							_KinesinunbindProbability = 1 / (_mP.kinesinForceUnbindingA*exp(-fabs(iter->_springLength*_mP.KINESINstiffness / _mP.kinesinForceUnbindingFd)));
 
-						if (takeFlatRandomNumber() > exp((-(_KinesinunbindProbability)*_sP.timeStep)))
-						{
-							_unboundKinesins.emplace_back(iter->_mountCoordinate);
-							iter = _boundKinesins.erase(iter);
-							std::cout << "this kinesin was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << iter->_springLength*_mP.KINESINstiffness << "pN" << std::endl;
+							if (takeFlatRandomNumber() > exp((-(_KinesinunbindProbability)*_sP.timeStep)))
+							{
+								_unboundKinesins.emplace_back(iter->_mountCoordinate);
+								iter = _boundKinesins.erase(iter);
+								//std::cout << "this kinesin was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << iter->_springLength*_mP.KINESINstiffness << "pN" << std::endl;
 
-						}
-						else
-						{
-							++iter;
+							}
+							else
+							{
+								++iter;
+							}
 						}
 					}
-
 					
 				/// Test for stepping for MT bound MAPs AND UPDATE SPRING EXTENSION LENGTHS
 		
