@@ -46,6 +46,8 @@ struct ModelParameters
 	double dMT ;
 	double hMT ;
 	double gammaMT;
+	double kinesinForceUnbindingA;
+	double kinesinForceUnbindingFd;
 };
 
 struct SystemState

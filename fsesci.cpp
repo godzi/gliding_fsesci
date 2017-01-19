@@ -362,7 +362,23 @@ public:
 						}
 					}
 
+				// Test for kinesin unbinding
+					for (auto iter = _boundKinesins.begin(); iter != _boundKinesins.end(); ) {
+						// update spring extensions based on previous microtubule step
 
+						iter->_springLength = iter->_springLength + _state.MTpositionStep;
+						_KinesinunbindProbability = 1 / (_mP.kinesinForceUnbindingA*exp(-fabs(iter->_springLength*_mP.KINESINstiffness / _mP.kinesinForceUnbindingFd)));
+
+						if (takeFlatRandomNumber() > exp((-(_KinesinunbindProbability)*_sP.timeStep)))
+						{
+							_unboundKinesins.emplace_back(iter->_mountCoordinate);
+							iter = _boundKinesins.erase(iter);
+							std::cout << "this kinesin was unbound " << iter->_mountCoordinate << std::endl;
+
+						}
+
+						++iter;
+					}
 
 					
 				/// Test for stepping for MT bound MAPs AND UPDATE SPRING EXTENSION LENGTHS
@@ -577,6 +593,7 @@ private:
 	DatFileLogger _MAPStepsLog;
 	double _MTsystemCoordinate;
 	double  _fractpart, _intpart;
+	double _KinesinunbindProbability;
 public:
 	int _testFlatBufferSizeFreq = 10;//iteration beetween tests
 	int _testGaussBufferSizeFreq = 10000;

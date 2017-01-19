@@ -96,6 +96,12 @@ Configuration assign_config_from_json(Configuration conf, json jsonobj) {
 	if (!(jsonobj["ModelParameters"]["KinesinunbindBorderFreq"].empty())) {
 		conf.modelParameters.KinesinunbindBorderFreq = stod(jsonobj["ModelParameters"]["KinesinunbindBorderFreq"].get<std::string>());
 	}
+	if (!(jsonobj["ModelParameters"]["kinesinForceUnbindingFd"].empty())) {
+		conf.modelParameters.kinesinForceUnbindingFd = stod(jsonobj["ModelParameters"]["kinesinForceUnbindingFd"].get<std::string>());
+	}
+	if (!(jsonobj["ModelParameters"]["kinesinForceUnbindingA"].empty())) {
+		conf.modelParameters.kinesinForceUnbindingA = stod(jsonobj["ModelParameters"]["kinesinForceUnbindingA"].get<std::string>());
+	}
 	//// Assign Initial Conditions from json
 	if (!(jsonobj["InitialConditions"]["MAPdistance"].empty())) {
 		conf.initialConditions.MAPdistance = stod(jsonobj["InitialConditions"]["MAPdistance"].get<std::string>());
