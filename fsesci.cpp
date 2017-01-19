@@ -375,7 +375,7 @@ public:
 							{
 								_unboundKinesins.emplace_back(iter->_mountCoordinate);
 								iter = _boundKinesins.erase(iter);
-								//std::cout << "this kinesin was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << iter->_springLength*_mP.KINESINstiffness << "pN" << std::endl;
+								std::cout << "this kinesin was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << iter->_springLength*_mP.KINESINstiffness << "pN" << std::endl;
 
 							}
 							else
