@@ -15,7 +15,7 @@
 #include <iomanip>
 #include <map>
 #include <random>
-
+#include <chrono>
 #include <memory>
 #include <immintrin.h>
 
@@ -148,7 +148,7 @@ public:
 	}
 
 	size_t initializeState() {
-	
+		_state.currentTime = 0.0;
 		_state.MTpositionStep = 0.0;
 	//	_state.MTposition = 0.0;
 		_NumberofMTsites = (int)floor(_initC.MTlength / _mP.deltaPeriod);
@@ -246,7 +246,7 @@ public:
 	}
 	//double taskStartTime,
 	// rndNumbers must contain 3 * nSteps random numbers
-	void advanceState(unsigned nSteps,  const double* rndNormalNumbers, const double* rndFlatNumbers, MklGaussianParallelGenerator* gaussGenerator, MklFlatParallelGenerator* flatGenerator) {
+	std::string advanceState(unsigned nSteps,  const double* rndNormalNumbers, const double* rndFlatNumbers, MklGaussianParallelGenerator* gaussGenerator, MklFlatParallelGenerator* flatGenerator) {
 
 	//	std::cout << "MTgamma" << _mP.gammaMT << std::endl;
 	//	std::cout << "kT" << _mP.kT << std::endl;
@@ -373,11 +373,13 @@ public:
 						{
 							_unboundKinesins.emplace_back(iter->_mountCoordinate);
 							iter = _boundKinesins.erase(iter);
-							std::cout << "this kinesin was unbound " << iter->_mountCoordinate << std::endl;
+							std::cout << "this kinesin was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << iter->_springLength*_mP.KINESINstiffness << "pN" << std::endl;
 
 						}
-
-						++iter;
+						else
+						{
+							++iter;
+						}
 					}
 
 					
@@ -515,13 +517,13 @@ public:
 		//////
 				if ((fabs(_state.SummMAPForces)>1000000.0))
 				{
-					std::cout << "Calculations aborted at simulation time " << _state.currentTime << " due to total MAP forces exceed 1000000.0" << std::endl;
-					return;
+					return "Calculations aborted at simulation time " + std::to_string(_state.currentTime) + " due to total MAP forces exceed 1000000.0" ;
+					
 				}
 				if ((fabs(_state.SummKINESINForces)>1000000.0))
 				{
-					std::cout << "Calculations aborted at simulation time " << _state.currentTime << " due to total Kinesin forces exceed 1000000.0" << std::endl;
-					return;
+					return "Calculations aborted at simulation time " + std::to_string(_state.currentTime) + " due to total Kinesin forces exceed 1000000.0";
+					
 				}
 
 
@@ -555,6 +557,7 @@ public:
 				
 			}
 		}
+		return "No errors encountered";
 	}
 
 	void writeStateTolog() const {
@@ -684,8 +687,8 @@ int main(int argc, char *argv[])
 			flatGenerator.generateNumbers();
 			const auto flatBuffData = flatGenerator.getNumbersBuffer();
 
-			tasks[0]->advanceState(taskStepsNum, gaussBuffData, flatBuffData,&gaussGenerator,&flatGenerator);
-			
+			std::string taskvalidation= tasks[0]->advanceState(taskStepsNum, gaussBuffData, flatBuffData,&gaussGenerator,&flatGenerator);
+			std::cout << taskvalidation << std::endl;
 			/*
 			#pragma omp parallel num_threads(nThreads) shared(buffData, tasks)
 			{
