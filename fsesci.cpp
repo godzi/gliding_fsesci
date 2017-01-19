@@ -472,6 +472,18 @@ public:
 				}
 
 		//////
+				if ((fabs(_state.SummMAPForces)>1000000.0))
+				{
+					std::cout << "Calculations aborted at simulation time " << _state.currentTime << " due to total MAP forces exceed 1000000.0" << std::endl;
+					return;
+				}
+				if ((fabs(_state.SummKINESINForces)>1000000.0))
+				{
+					std::cout << "Calculations aborted at simulation time " << _state.currentTime << " due to total Kinesin forces exceed 1000000.0" << std::endl;
+					return;
+				}
+
+
 			_SummForces = -(_mP.KINESINforcesOn* _state.SummKINESINForces+ _mP.MAPforcesOn* _state.SummMAPForces);
 			
 			////
