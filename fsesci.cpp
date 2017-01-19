@@ -173,40 +173,56 @@ public:
 		
 		////
 		/// test for binding
-		for (int i = 1; i <= _NumberofMTsites;i++) {
-			
-			_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*(static_cast<double>(i) - 1.0);
+		
+		for (auto iter = _unboundMaps.begin(); iter != _unboundMaps.end(); ) {
+			_MTsystemCoordinate = iter->_mountCoordinate - _state.MTposition;
+			if ((_MTsystemCoordinate < 0.5*_mP.deltaPeriod) || (_MTsystemCoordinate > double(_NumberofMTsites - 1)*0.5*_mP.deltaPeriod))
+			{
+				++iter;
+			}
+			else
+			{
 
-			//std::cout << "_unboundMaps.size() = " << _unboundMaps.size() << std::endl;
-			//std::cout << "iter->_mountCoordinate = " << _unboundMaps.begin()->_mountCoordinate << std::endl;
-			for (auto iter = _unboundMaps.begin(); iter != _unboundMaps.end(); ) {
-				// std::cout << "MAPS iter-> = " << iter- _unboundMaps.begin() << std::endl;
-			//	std::cout << i << " "<< iter - _unboundMaps.begin() << " " << iter->_mountCoordinate << " " << _SurfaceDistanceofiSite << " " << ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= (_mP.deltaPeriod / 2.0))  << std::endl;
-				if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= 1.01*(_mP.deltaPeriod / 2.0)) {
-					_boundMaps.emplace_back(iter->_mountCoordinate, i, iter->_mountCoordinate - _SurfaceDistanceofiSite);
-					saveStepingMap(0.0, iter->_mountCoordinate,i);
-					iter = _unboundMaps.erase(iter);
-					
-				}
-				else
-				{
-					++iter;
-				}					
+
+				_fractpart = modf(((_MTsystemCoordinate + 0.5*_mP.deltaPeriod) / _mP.deltaPeriod), &_intpart);
+				int sitenum = _intpart + 1.0;
+				_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*(sitenum - 1.0);
+
+
+				_boundMaps.emplace_back(iter->_mountCoordinate, static_cast<int>(sitenum), iter->_mountCoordinate - _SurfaceDistanceofiSite);
+				saveStepingMap(_state.currentTime, iter->_mountCoordinate, static_cast<int>(sitenum));
+				iter = _unboundMaps.erase(iter);
+				//
+
+
 			}
-			for (auto iter = _unboundKinesins.begin(); iter != _unboundKinesins.end(); ) {
-				if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= 1.01* (_mP.deltaPeriod / 2.0)) {
-					_boundKinesins.emplace_back(iter->_mountCoordinate, i, iter->_mountCoordinate - _SurfaceDistanceofiSite);
-					saveStepingKinesin(0.0, iter->_mountCoordinate, i);
-					iter = _unboundKinesins.erase(iter);
-					
-				}
-				else
-				{
-					++iter;
-				}
-			}
-			
 		}
+		// Test for kinesin binding
+		for (auto iter = _unboundKinesins.begin(); iter != _unboundKinesins.end(); ) {
+			_MTsystemCoordinate = iter->_mountCoordinate - _state.MTposition;
+			if ((_MTsystemCoordinate < 0.5*_mP.deltaPeriod) || (_MTsystemCoordinate > double(_NumberofMTsites - 1)*0.5*_mP.deltaPeriod))
+			{
+				++iter;
+			}
+			else
+			{
+
+
+				_fractpart = modf(((_MTsystemCoordinate + 0.5*_mP.deltaPeriod) / _mP.deltaPeriod), &_intpart);
+				int sitenum = _intpart + 1.0;
+				_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*(sitenum - 1.0);
+
+
+				_boundKinesins.emplace_back(iter->_mountCoordinate, static_cast<int>(sitenum), iter->_mountCoordinate - _SurfaceDistanceofiSite);
+				saveStepingKinesin(_state.currentTime, iter->_mountCoordinate, static_cast<int>(sitenum));
+				iter = _unboundKinesins.erase(iter);
+				//
+
+
+			}
+		}
+
+
 	//	std::cout << "_boundKinesins.size() = " << _boundKinesins.size() << std::endl;
 	//	std::cout << "_boundMaps.size() = " << _boundMaps.size() << std::endl;
 		return neededFlatBufferSize;
@@ -295,12 +311,12 @@ public:
 			//std::cout << "taskIteration = " << taskIteration << ", FlatRandomCounter = " << counterFlatRandomNumber << ", FlatRandom = " << rndFlatNumbers[counterFlatRandomNumber] << ", BoundMAPs = " << _boundMaps.size() <<std::endl;
 			//takeFlatRandomNumber();
 
-					/// Test for binding
+					/// Test for MAP binding
 				//for (int it = 0; it < 6; it++) {
 				
 					for (auto iter = _unboundMaps.begin(); iter != _unboundMaps.end(); ) {
-						_MTsystemMAPcoordinate = iter->_mountCoordinate - _state.MTposition;
-						if ((_MTsystemMAPcoordinate < 0.5*_mP.deltaPeriod) || (_MTsystemMAPcoordinate > double(_NumberofMTsites-1)*0.5*_mP.deltaPeriod))
+						_MTsystemCoordinate = iter->_mountCoordinate - _state.MTposition;
+						if ((_MTsystemCoordinate < 0.5*_mP.deltaPeriod) || (_MTsystemCoordinate > double(_NumberofMTsites-1)*0.5*_mP.deltaPeriod))
 						{
 							++iter;
 						}
@@ -308,7 +324,7 @@ public:
 						{
 							
 														
-							_fractpart = modf(((_MTsystemMAPcoordinate + 0.5*_mP.deltaPeriod) / _mP.deltaPeriod), &_intpart);
+							_fractpart = modf(((_MTsystemCoordinate + 0.5*_mP.deltaPeriod) / _mP.deltaPeriod), &_intpart);
 							int sitenum = _intpart + 1.0;
 							_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*(sitenum - 1.0);
 
@@ -321,25 +337,34 @@ public:
 							
 						}
 					}
-					for (int it = 0; it < 18; it++) {
-						int i = sitestocheck[it];
-						_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*((double)i - 1.0);
-
+					// Test for kinesin binding
 					for (auto iter = _unboundKinesins.begin(); iter != _unboundKinesins.end(); ) {
-						if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= 1.01*(_mP.deltaPeriod / 2.0)) {
-							_boundKinesins.emplace_back(iter->_mountCoordinate, i, iter->_mountCoordinate - _SurfaceDistanceofiSite);
-							saveStepingKinesin(_state.currentTime, iter->_mountCoordinate, i);
-							iter = _unboundKinesins.erase(iter);
-							//
-							
-						}
-						else
+						_MTsystemCoordinate = iter->_mountCoordinate - _state.MTposition;
+						if ((_MTsystemCoordinate < 0.5*_mP.deltaPeriod) || (_MTsystemCoordinate > double(_NumberofMTsites - 1)*0.5*_mP.deltaPeriod))
 						{
 							++iter;
 						}
+						else
+						{
+
+
+							_fractpart = modf(((_MTsystemCoordinate + 0.5*_mP.deltaPeriod) / _mP.deltaPeriod), &_intpart);
+							int sitenum = _intpart + 1.0;
+							_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*(sitenum - 1.0);
+
+
+							_boundKinesins.emplace_back(iter->_mountCoordinate, static_cast<int>(sitenum), iter->_mountCoordinate - _SurfaceDistanceofiSite);
+							saveStepingKinesin(_state.currentTime, iter->_mountCoordinate, static_cast<int>(sitenum));
+							iter = _unboundKinesins.erase(iter);
+							//
+
+
+						}
 					}
 
-				}
+
+
+					
 				/// Test for stepping for MT bound MAPs AND UPDATE SPRING EXTENSION LENGTHS
 		
 				for (auto iter = _boundMaps.begin(); iter != _boundMaps.end(); ) {
@@ -550,7 +575,7 @@ private:
 	double _kMinus=0.0;
 	DatFileLogger _kinesinStepsLog;
 	DatFileLogger _MAPStepsLog;
-	double _MTsystemMAPcoordinate;
+	double _MTsystemCoordinate;
 	double  _fractpart, _intpart;
 public:
 	int _testFlatBufferSizeFreq = 10;//iteration beetween tests
