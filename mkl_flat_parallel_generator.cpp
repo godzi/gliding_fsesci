@@ -2,7 +2,8 @@
 #include <stdlib.h>
 #include <stdexcept>
 #include <omp.h>
-
+#include <ctime>
+#include <thread>
 
 
 MklFlatParallelGenerator::MklFlatParallelGenerator() {}
@@ -15,7 +16,8 @@ void MklFlatParallelGenerator::initialize(double leftBound, double rightBound, s
 	_bufferSize = bufferSize;
 	_threadNum = threadNum;
 	///////////////// If reproducibility from launch to launch is required seed is const, eslse seed must be random
-	MKL_UINT seed = __rdtsc();
+	//MKL_UINT seed = __rdtsc();
+	MKL_UINT seed = static_cast<unsigned>(std::time(0))*static_cast<unsigned>(std::hash<std::thread::id>()(std::this_thread::get_id()));
 	/////////////////
 	for (unsigned i = 0; i < threadNum; i++) {
 		_streamWrappers.emplace_back(VSL_BRNG_MT2203 + i, seed);
