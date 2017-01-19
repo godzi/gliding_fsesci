@@ -173,7 +173,7 @@ public:
 		
 		////
 		/// test for binding
-		
+	/*	
 		for (auto iter = _unboundMaps.begin(); iter != _unboundMaps.end(); ) {
 			_MTsystemCoordinate = iter->_mountCoordinate - _state.MTposition;
 			if ((_MTsystemCoordinate < 0.5*_mP.deltaPeriod) || (_MTsystemCoordinate > double(_NumberofMTsites - 1)*0.5*_mP.deltaPeriod))
@@ -222,7 +222,43 @@ public:
 			}
 		}
 
+		*/
 
+		/// test for binding
+		for (int i = 1; i <= _NumberofMTsites; i++) {
+
+			_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*(static_cast<double>(i) - 1.0);
+
+			//std::cout << "_unboundMaps.size() = " << _unboundMaps.size() << std::endl;
+			//std::cout << "iter->_mountCoordinate = " << _unboundMaps.begin()->_mountCoordinate << std::endl;
+			for (auto iter = _unboundMaps.begin(); iter != _unboundMaps.end(); ) {
+				// std::cout << "MAPS iter-> = " << iter- _unboundMaps.begin() << std::endl;
+				//	std::cout << i << " "<< iter - _unboundMaps.begin() << " " << iter->_mountCoordinate << " " << _SurfaceDistanceofiSite << " " << ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= (_mP.deltaPeriod / 2.0))  << std::endl;
+				if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= 1.01*(_mP.deltaPeriod / 2.0)) {
+					_boundMaps.emplace_back(iter->_mountCoordinate, i, iter->_mountCoordinate - _SurfaceDistanceofiSite);
+					saveStepingMap(0.0, iter->_mountCoordinate, i);
+					iter = _unboundMaps.erase(iter);
+
+				}
+				else
+				{
+					++iter;
+				}
+			}
+			for (auto iter = _unboundKinesins.begin(); iter != _unboundKinesins.end(); ) {
+				if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= 1.01* (_mP.deltaPeriod / 2.0)) {
+					_boundKinesins.emplace_back(iter->_mountCoordinate, i, iter->_mountCoordinate - _SurfaceDistanceofiSite);
+					saveStepingKinesin(0.0, iter->_mountCoordinate, i);
+					iter = _unboundKinesins.erase(iter);
+
+				}
+				else
+				{
+					++iter;
+				}
+			}
+
+		}
 	//	std::cout << "_boundKinesins.size() = " << _boundKinesins.size() << std::endl;
 	//	std::cout << "_boundMaps.size() = " << _boundMaps.size() << std::endl;
 		return neededFlatBufferSize;
