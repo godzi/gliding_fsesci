@@ -147,6 +147,10 @@ public:
 		}
 	}
 
+
+	
+
+
 	size_t initializeState() {
 		_state.currentTime = 0.0;
 		_state.MTpositionStep = 0.0;
@@ -172,61 +176,12 @@ public:
 		size_t neededFlatBufferSize = _unboundKinesins.size() + 2 * _unboundMaps.size();
 		
 		////
-		/// test for binding
-		/*
-		double sitenum;
-		for (auto iter = _unboundMaps.begin(); iter != _unboundMaps.end(); ) {
-			_MTsystemCoordinate = iter->_mountCoordinate - _state.MTposition;
-			
-			if ((_MTsystemCoordinate < -0.5*_mP.deltaPeriod) || (_MTsystemCoordinate > (double(_NumberofMTsites) - 0.5)*_mP.deltaPeriod))
-			{
-				++iter;
-			}
-			else
-			{
-
-
-				_fractpart = modf(((_MTsystemCoordinate + 0.5*_mP.deltaPeriod) / _mP.deltaPeriod), &_intpart);
-				sitenum = _intpart + 1.0;
-				_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*(sitenum - 1.0);
-
-
-				_boundMaps.emplace_back(iter->_mountCoordinate, static_cast<int>(sitenum), iter->_mountCoordinate - _SurfaceDistanceofiSite);
-				saveStepingMap(_state.currentTime, iter->_mountCoordinate, static_cast<int>(sitenum));
-				iter = _unboundMaps.erase(iter);
-				//
-
-
-			}
-		}
-		// Test for kinesin binding
-		for (auto iter = _unboundKinesins.begin(); iter != _unboundKinesins.end(); ) {
-			_MTsystemCoordinate = iter->_mountCoordinate - _state.MTposition;
-			if ((_MTsystemCoordinate < -0.5*_mP.deltaPeriod) || (_MTsystemCoordinate >(double(_NumberofMTsites) - 0.5)*_mP.deltaPeriod))
-			{
-				++iter;
-			}
-			else
-			{
-
-
-				_fractpart = modf(((_MTsystemCoordinate + 0.5*_mP.deltaPeriod) / _mP.deltaPeriod), &_intpart);
-				sitenum = _intpart + 1.0;
-				_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*(sitenum - 1.0);
-
-
-				_boundKinesins.emplace_back(iter->_mountCoordinate, static_cast<int>(sitenum), iter->_mountCoordinate - _SurfaceDistanceofiSite);
-				saveStepingKinesin(_state.currentTime, iter->_mountCoordinate, static_cast<int>(sitenum));
-				iter = _unboundKinesins.erase(iter);
-				//
-
-
-			}
-		}
-		*/
+		
+		
 		
 
 		/// test for binding
+/*
 		for (int i = 1; i <= _NumberofMTsites; i++) {
 
 			_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*(static_cast<double>(i) - 1.0);
@@ -261,7 +216,9 @@ public:
 			}
 
 		}
-		
+	
+
+	*/
 	//	std::cout << "_boundKinesins.size() = " << _boundKinesins.size() << std::endl;
 	//	std::cout << "_boundMaps.size() = " << _boundMaps.size() << std::endl;
 		return neededFlatBufferSize;
@@ -350,56 +307,71 @@ public:
 			//std::cout << "taskIteration = " << taskIteration << ", FlatRandomCounter = " << counterFlatRandomNumber << ", FlatRandom = " << rndFlatNumbers[counterFlatRandomNumber] << ", BoundMAPs = " << _boundMaps.size() <<std::endl;
 			//takeFlatRandomNumber();
 
-					/// Test for MAP binding
-				//for (int it = 0; it < 6; it++) {
 				
-					for (auto iter = _unboundMaps.begin(); iter != _unboundMaps.end(); ) {
-						_MTsystemCoordinate = iter->_mountCoordinate - _state.MTposition;
-						if ((_MTsystemCoordinate < 0.5*_mP.deltaPeriod) || (_MTsystemCoordinate > double(_NumberofMTsites-1)*0.5*_mP.deltaPeriod))
+
+			/// test for binding
+			
+			for (auto iter = _unboundMaps.begin(); iter != _unboundMaps.end(); ) {
+				_MTsystemCoordinate = iter->_mountCoordinate - _state.MTposition;
+
+				if ((_MTsystemCoordinate < -0.5*_mP.deltaPeriod) || (_MTsystemCoordinate >(double(_NumberofMTsites) - 0.5)*_mP.deltaPeriod))
+				{
+					++iter;
+				}
+				else
+				{
+					_fractpart = modf(((_MTsystemCoordinate + 0.5*_mP.deltaPeriod) / _mP.deltaPeriod), &_intpart);
+					_sitenum = _intpart + 1.0;
+
+					if ((_sitenum > 1.0) && (_sitenum < double(_NumberofMTsites)) && ((0.5 - fabs((_MTsystemCoordinate - (_mP.deltaPeriod*(_sitenum - 1.0))) / _mP.deltaPeriod))<0.01))
+					{
+
+						if (takeFlatRandomNumber() <= 0.5)
 						{
-							++iter;
-						}
-						else
-						{
-							
-														
-							_fractpart = modf(((_MTsystemCoordinate + 0.5*_mP.deltaPeriod) / _mP.deltaPeriod), &_intpart);
-							int sitenum = _intpart + 1.0;
-							_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*(sitenum - 1.0);
-
-							
-								_boundMaps.emplace_back(iter->_mountCoordinate, static_cast<int>(sitenum), iter->_mountCoordinate - _SurfaceDistanceofiSite);
-								saveStepingMap(_state.currentTime, iter->_mountCoordinate, static_cast<int>(sitenum));
-								iter = _unboundMaps.erase(iter);
-								//
-
-							
-						}
-					}
-					// Test for kinesin binding
-					for (auto iter = _unboundKinesins.begin(); iter != _unboundKinesins.end(); ) {
-						_MTsystemCoordinate = iter->_mountCoordinate - _state.MTposition;
-						if ((_MTsystemCoordinate < 0.5*_mP.deltaPeriod) || (_MTsystemCoordinate > double(_NumberofMTsites - 1)*0.5*_mP.deltaPeriod))
-						{
-							++iter;
-						}
-						else
-						{
-
-
-							_fractpart = modf(((_MTsystemCoordinate + 0.5*_mP.deltaPeriod) / _mP.deltaPeriod), &_intpart);
-							int sitenum = _intpart + 1.0;
-							_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*(sitenum - 1.0);
-
-
-							_boundKinesins.emplace_back(iter->_mountCoordinate, static_cast<int>(sitenum), iter->_mountCoordinate - _SurfaceDistanceofiSite);
-							saveStepingKinesin(_state.currentTime, iter->_mountCoordinate, static_cast<int>(sitenum));
-							iter = _unboundKinesins.erase(iter);
-							//
-
-
+							_sitenum = _sitenum + 1.0;
 						}
 					}
+					_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*(_sitenum - 1.0);
+					_boundMaps.emplace_back(iter->_mountCoordinate, static_cast<int>(_sitenum), iter->_mountCoordinate - _SurfaceDistanceofiSite);
+					saveStepingMap(_state.currentTime, iter->_mountCoordinate, static_cast<int>(_sitenum));
+					iter = _unboundMaps.erase(iter);
+					//
+				}
+			}
+
+			// Test for kinesin binding
+			
+			for (auto iter = _unboundKinesins.begin(); iter != _unboundKinesins.end(); ) {
+				_MTsystemCoordinate = iter->_mountCoordinate - _state.MTposition;
+				if ((_MTsystemCoordinate < -0.5*_mP.deltaPeriod) || (_MTsystemCoordinate >(double(_NumberofMTsites) - 0.5)*_mP.deltaPeriod))
+				{
+					++iter;
+				}
+				else
+				{
+					_fractpart = modf(((_MTsystemCoordinate + 0.5*_mP.deltaPeriod) / _mP.deltaPeriod), &_intpart);
+					_sitenum = _intpart + 1.0;
+
+					if ((_sitenum > 1.0) && (_sitenum < double(_NumberofMTsites)) && ((0.5 - fabs((_MTsystemCoordinate - (_mP.deltaPeriod*(_sitenum - 1.0))) / _mP.deltaPeriod))<0.01))
+					{
+
+						if (takeFlatRandomNumber() <= 0.5)
+						{
+							_sitenum = _sitenum + 1.0;
+						}
+					}
+
+					_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*(_sitenum - 1.0);
+					_boundKinesins.emplace_back(iter->_mountCoordinate, static_cast<int>(_sitenum), iter->_mountCoordinate - _SurfaceDistanceofiSite);
+					saveStepingKinesin(_state.currentTime, iter->_mountCoordinate, static_cast<int>(_sitenum));
+					iter = _unboundKinesins.erase(iter);
+					//
+				}
+			}
+
+
+
+
 					//Update spring liength for kinesins (not to do it in stepping or unbinding)
 					for (auto iter = _boundKinesins.begin(); iter != _boundKinesins.end(); )
 					{
@@ -614,6 +586,7 @@ public:
 	}
 
 private:
+	
 	const SimulationParameters _sP;
 	const ModelParameters _mP;
 	const InitialConditions _initC;
@@ -644,6 +617,8 @@ private:
 	double _MTsystemCoordinate;
 	double  _fractpart, _intpart;
 	double _KinesinunbindProbability;
+	double _sitenum;
+	
 public:
 	int _testFlatBufferSizeFreq = 10;//iteration beetween tests
 	int _testGaussBufferSizeFreq = 10000;
