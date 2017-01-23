@@ -147,6 +147,9 @@ Configuration assign_config_from_json(Configuration conf, json jsonobj) {
 	if (!(jsonobj["InitialConditions"]["kinesinUnbinding"].empty())) {
 		conf.initialConditions.kinesinUnbinding = stod(jsonobj["InitialConditions"]["kinesinUnbinding"].get<std::string>());
 	}
+	if (!(jsonobj["InitialConditions"]["stopSimIfNoMAPsKinesins"].empty())) {
+		conf.initialConditions.stopSimIfNoMAPsKinesins = stod(jsonobj["InitialConditions"]["stopSimIfNoMAPsKinesins"].get<std::string>());
+	}
 	
 	//// Assign Dynamic Coordinates from json initial conditions
 	if (!(jsonobj["InitialConditions"]["MTposition"].empty())) {

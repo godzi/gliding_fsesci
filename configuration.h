@@ -88,6 +88,7 @@ struct InitialConditions
 	double watchKinesins;
 	double fulllogMAPsKinesins;
 	double kinesinUnbinding;
+	double stopSimIfNoMAPsKinesins;
 };
 // Composition of parameters
 struct Configuration

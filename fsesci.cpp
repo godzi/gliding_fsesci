@@ -534,17 +534,35 @@ public:
 				}
 
 		//////
+				// stop simulations if forces too high
 				if ((fabs(_state.SummMAPForces)>1000000.0))
 				{
+					// basic coordinates log
+					writeStateTolog();
 					return "Calculations aborted at simulation time " + std::to_string(_state.currentTime) + " due to total MAP forces exceed 1000000.0" ;
 					
 				}
 				if ((fabs(_state.SummKINESINForces)>1000000.0))
 				{
+					// basic coordinates log
+					writeStateTolog();
 					return "Calculations aborted at simulation time " + std::to_string(_state.currentTime) + " due to total Kinesin forces exceed 1000000.0";
 					
 				}
+				////
+				// stop simulation if no MAPs and Kinesins bound, but only if parameter stopSimIfNoMAPsKinesins set to 1.0
+				if (_initC.stopSimIfNoMAPsKinesins == 1.0)
+				{
+					if ((_boundKinesins.size()==0)&&(_boundMaps.size()==0))
+					{
+						// basic coordinates log
+						writeStateTolog();
+						return "Calculations aborted at simulation time " + std::to_string(_state.currentTime) + " due to no MAPs and Kinesins left on the MT and stopSimIfNoMAPsKinesins is on";
 
+					}
+				}
+
+				//////////////////
 
 			_SummForces = -(_mP.KINESINforcesOn* _state.SummKINESINForces+ _mP.MAPforcesOn* _state.SummMAPForces);
 			
