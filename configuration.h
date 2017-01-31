@@ -91,6 +91,9 @@ struct InitialConditions
 	double fulllogMAPsKinesins;
 	double kinesinUnbinding;
 	double stopSimIfNoMAPsKinesins;
+	double oldInitialMount;
+	double numberKinesins;
+	double numberMAPs;
 };
 // Composition of parameters
 struct Configuration

@@ -44,7 +44,16 @@ const double kBoltz= 1.38064852e-5;// (*pN um *)
 /// ToDo try to use ofstream rawwrite
 
 
+//Random for surface Mounts of MAPs and kinesins
+unsigned seedMount = std::chrono::system_clock::now().time_since_epoch().count();
+std::default_random_engine generatorMount(seedMount);
 
+double get_uniform_rnd_forMounts(double start, double end)
+{
+	std::uniform_real_distribution<double> distribution(start, end);
+	return distribution(generatorMount);
+
+}
 
 ///
 double mod(double a, double N)
@@ -164,20 +173,46 @@ public:
 		_kinesinvLoaded.kinesinPparam = _mP.kinesinPparam;
 		_kinesinvLoaded.forceVelocityOn = _mP.forceVelocityOn;
 		/// Initial binding
-		double numberMAPsInOneSite;
-		double numberKinesinsInOneSite;
-		for (double place = 0.0+ _initC.surfaceKINESINstartPoint; place < _initC.surfaceLength ; place = place + _initC.KINESINdistance) {
-			for (double ind = _mP.numberKinesinsInOneSite; ind >= 1.0;ind--)
-			{
-				_unboundKinesins.emplace_back(place-(ind-1.0)*(0.001/_mP.numberKinesinsInOneSite));
+		
+		if(_initC.oldInitialMount==1.0) 
+		{
+			for (double place = 0.0 + _initC.surfaceKINESINstartPoint; place < _initC.surfaceLength; place = place + _initC.KINESINdistance) {
+				for (double ind = _mP.numberKinesinsInOneSite; ind >= 1.0; ind--)
+				{
+					_unboundKinesins.emplace_back(place - (ind - 1.0)*(0.001 / _mP.numberKinesinsInOneSite));
+				}
+			}
+			for (double place = 0.0 + _initC.surfaceMAPstartPoint; place < _initC.surfaceLength; place = place + _initC.MAPdistance) {
+				for (double ind = _mP.numberMAPsInOneSite; ind >= 1.0; ind--)
+				{
+					_unboundMaps.emplace_back(place - (ind - 1.0)*(0.001 / _mP.numberMAPsInOneSite));
+				}
 			}
 		}
-		for (double place = 0.0+ _initC.surfaceMAPstartPoint; place < _initC.surfaceLength ; place = place + _initC.MAPdistance) {
-			for (double ind = _mP.numberMAPsInOneSite; ind >= 1.0; ind--)
+		else
+		{
+			
+
+			//Kinesin binding
+			
+			for (double ind = 0.0; ind < _initC.numberKinesins; ind++)
 			{
-				_unboundMaps.emplace_back(place - (ind - 1.0)*(0.001 / _mP.numberMAPsInOneSite));
-			}			
+				_unboundKinesins.emplace_back(get_uniform_rnd_forMounts(_initC.surfaceKINESINstartPoint, _initC.surfaceLength));
+			}
+			//MAPs binding
+			for (double ind = 0.0; ind < _initC.numberMAPs; ind++)
+			{
+				_unboundMaps.emplace_back(get_uniform_rnd_forMounts(_initC.surfaceMAPstartPoint, _initC.surfaceLength));
+			}
+
+
 		}
+
+
+		
+		
+
+		
 	//	std::cout << "_unboundKinesins.size= " << _unboundKinesins.size() << std::endl;
 	//	std::cout << "_unboundMaps.size= " << _unboundMaps.size() << std::endl;
 		////////////////////////
