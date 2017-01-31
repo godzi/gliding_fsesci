@@ -164,11 +164,19 @@ public:
 		_kinesinvLoaded.kinesinPparam = _mP.kinesinPparam;
 		_kinesinvLoaded.forceVelocityOn = _mP.forceVelocityOn;
 		/// Initial binding
+		double numberMAPsInOneSite;
+		double numberKinesinsInOneSite;
 		for (double place = 0.0+ _initC.surfaceKINESINstartPoint; place < _initC.surfaceLength ; place = place + _initC.KINESINdistance) {
-			_unboundKinesins.emplace_back(place);
+			for (double ind = _mP.numberKinesinsInOneSite; ind >= 1.0;ind--)
+			{
+				_unboundKinesins.emplace_back(place-(ind-1.0)*(0.001/_mP.numberKinesinsInOneSite));
+			}
 		}
 		for (double place = 0.0+ _initC.surfaceMAPstartPoint; place < _initC.surfaceLength ; place = place + _initC.MAPdistance) {
-			_unboundMaps.emplace_back(place);
+			for (double ind = _mP.numberMAPsInOneSite; ind >= 1.0; ind--)
+			{
+				_unboundMaps.emplace_back(place - (ind - 1.0)*(0.001 / _mP.numberMAPsInOneSite));
+			}			
 		}
 	//	std::cout << "_unboundKinesins.size= " << _unboundKinesins.size() << std::endl;
 	//	std::cout << "_unboundMaps.size= " << _unboundMaps.size() << std::endl;

@@ -48,6 +48,8 @@ struct ModelParameters
 	double gammaMT;
 	double kinesinForceUnbindingA;
 	double kinesinForceUnbindingFd;
+	double numberMAPsInOneSite;
+	double numberKinesinsInOneSite;
 };
 
 struct SystemState
