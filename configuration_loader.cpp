@@ -124,8 +124,13 @@ Configuration assign_config_from_json(Configuration conf, json jsonobj) {
 	if (!(jsonobj["ModelParameters"]["MAPKon"].empty())) {
 		conf.modelParameters.MAPKon = stod(jsonobj["ModelParameters"]["MAPKon"].get<std::string>());
 	}
-
-
+	if (!(jsonobj["ModelParameters"]["MAPKoff"].empty())) {
+		conf.modelParameters.MAPKoff = stod(jsonobj["ModelParameters"]["MAPKoff"].get<std::string>());
+	}
+	
+	if (!(jsonobj["ModelParameters"]["MAPfsmParforKoff"].empty())) {
+		conf.modelParameters.MAPfsmParforKoff = stod(jsonobj["ModelParameters"]["MAPfsmParforKoff"].get<std::string>());
+	}
 
 
 
@@ -174,6 +179,10 @@ Configuration assign_config_from_json(Configuration conf, json jsonobj) {
 	}
 	if (!(jsonobj["InitialConditions"]["kinesinUnbinding"].empty())) {
 		conf.initialConditions.kinesinUnbinding = stod(jsonobj["InitialConditions"]["kinesinUnbinding"].get<std::string>());
+	}
+	
+	if (!(jsonobj["InitialConditions"]["MAPUnbinding"].empty())) {
+		conf.initialConditions.MAPUnbinding = stod(jsonobj["InitialConditions"]["MAPUnbinding"].get<std::string>());
 	}
 	if (!(jsonobj["InitialConditions"]["stopSimIfNoMAPsKinesins"].empty())) {
 		conf.initialConditions.stopSimIfNoMAPsKinesins = stod(jsonobj["InitialConditions"]["stopSimIfNoMAPsKinesins"].get<std::string>());

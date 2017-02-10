@@ -445,19 +445,46 @@ public:
 						++iter;
 					}
 
-				// Test for kinesin unbinding
+					// Test for MAP unbinding
+					if (_initC.MAPUnbinding == 1.0)
+					{
+						for (auto iter = _boundMaps.begin(); iter != _boundMaps.end(); ) {
+							// update spring extensions based on previous microtubule step
+							_currentSpringLength = iter->_springLength + _state.MTpositionStep;
+
+							_MAPsunbindProbability = _mP.MAPKoff*exp(fabs(_currentSpringLength)*_mP.MAPfsmParforKoff/ (kBoltz*_mP.T));
+
+							if (takeFlatRandomNumber() > exp((-(_MAPsunbindProbability)*_sP.timeStep)))
+							{
+								saveStepingMap(_state.currentTime, iter->_mountCoordinate, iter->_MTsite);
+								std::cout << "this MAP was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << iter->_springLength*_mP.MAPstiffness << "pN" << std::endl;
+								_unboundMaps.emplace_back(iter->_mountCoordinate);
+								iter = _boundMaps.erase(iter);
+
+
+
+							}
+							else
+							{
+								++iter;
+							}
+						}
+					}
+
+
+					// Test for kinesin unbinding
 					if (_initC.kinesinUnbinding==1.0)
 					{
 						for (auto iter = _boundKinesins.begin(); iter != _boundKinesins.end(); ) {
 							// update spring extensions based on previous microtubule step
-
+							_currentSpringLength=iter->_springLength + _state.MTpositionStep;
 						
-							_KinesinunbindProbability = 1 / (_mP.kinesinForceUnbindingA*exp(-fabs(iter->_springLength*_mP.KINESINstiffness / _mP.kinesinForceUnbindingFd)));
+							_KinesinunbindProbability = 1 / (_mP.kinesinForceUnbindingA*exp(-fabs(_currentSpringLength*_mP.KINESINstiffness / _mP.kinesinForceUnbindingFd)));
 
 							if (takeFlatRandomNumber() > exp((-(_KinesinunbindProbability)*_sP.timeStep)))
 							{
 								saveStepingKinesin(_state.currentTime, iter->_mountCoordinate,iter->_MTsite);
-								std::cout << "this kinesin was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << iter->_springLength*_mP.KINESINstiffness << "pN" << std::endl;
+								std::cout << "this kinesin was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << _currentSpringLength*_mP.KINESINstiffness << "pN" << std::endl;
 								_unboundKinesins.emplace_back(iter->_mountCoordinate);
 								iter = _boundKinesins.erase(iter);
 								
@@ -705,8 +732,10 @@ private:
 	double _MTsystemCoordinate;
 	double  _fractpart, _intpart;
 	double _KinesinunbindProbability;
+	double _MAPsunbindProbability;
 	double _sitenum;
 	double _everboundedMAPsKinesins;
+	double _currentSpringLength;
 	
 public:
 	int _testFlatBufferSizeFreq = 10;//iteration beetween tests

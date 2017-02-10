@@ -54,7 +54,8 @@ struct ModelParameters
 	double useMAPBindingKon;
 	double KinesinKon;
 	double MAPKon;
-
+	double MAPKoff;
+	double MAPfsmParforKoff;
 
 };
 
@@ -96,6 +97,7 @@ struct InitialConditions
 	double watchKinesins;
 	double fulllogMAPsKinesins;
 	double kinesinUnbinding;
+	double MAPUnbinding;
 	double stopSimIfNoMAPsKinesins;
 	double oldInitialMount;
 	double numberKinesins;
