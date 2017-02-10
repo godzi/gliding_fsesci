@@ -330,6 +330,7 @@ public:
 		/// Code below for single iteration
 		double timeCompute = 0.0;
 		_state.currentTime = 0.0;
+		_everboundedMAPsKinesins = 0.0;
 		for (unsigned taskIteration = 0; taskIteration < nSteps; taskIteration++) {
 			_state.currentTime += _sP.timeStep;
 			_state.SummKINESINForces = 0.0;
@@ -350,35 +351,43 @@ public:
 			//std::cout << "taskIteration = " << taskIteration << ", FlatRandomCounter = " << counterFlatRandomNumber << ", FlatRandom = " << rndFlatNumbers[counterFlatRandomNumber] << ", BoundMAPs = " << _boundMaps.size() <<std::endl;
 			//takeFlatRandomNumber();
 
-				
+			
 
 			/// test for binding
 			
 			for (auto iter = _unboundMaps.begin(); iter != _unboundMaps.end(); ) {
 				_MTsystemCoordinate = iter->_mountCoordinate - _state.MTposition;
-
-				if ((_MTsystemCoordinate < -0.5*_mP.deltaPeriod) || (_MTsystemCoordinate >(double(_NumberofMTsites) - 0.5)*_mP.deltaPeriod))
+				if ((takeFlatRandomNumber() > exp(-(_mP.MAPKon)*_sP.timeStep)) || (_mP.useMAPBindingKon == 0.0))
 				{
-					++iter;
+					if ((_MTsystemCoordinate < -0.5*_mP.deltaPeriod) || (_MTsystemCoordinate > (double(_NumberofMTsites) - 0.5)*_mP.deltaPeriod))
+					{
+						++iter;
+					}
+					else
+					{
+						_fractpart = modf(((_MTsystemCoordinate + 0.5*_mP.deltaPeriod) / _mP.deltaPeriod), &_intpart);
+						_sitenum = _intpart + 1.0;
+
+						if ((_sitenum > 1.0) && (_sitenum < double(_NumberofMTsites)) && ((0.5 - fabs((_MTsystemCoordinate - (_mP.deltaPeriod*(_sitenum - 1.0))) / _mP.deltaPeriod)) < 0.01))
+						{
+
+							if (takeFlatRandomNumber() <= 0.5)
+							{
+								_sitenum = _sitenum + 1.0;
+							}
+						}
+						_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*(_sitenum - 1.0);
+						_boundMaps.emplace_back(iter->_mountCoordinate, static_cast<int>(_sitenum), iter->_mountCoordinate - _SurfaceDistanceofiSite);
+						saveStepingMap(_state.currentTime, iter->_mountCoordinate, static_cast<int>(_sitenum));
+						_everboundedMAPsKinesins = _everboundedMAPsKinesins + 1.0;
+						iter = _unboundMaps.erase(iter);
+					
+						//
+					}
 				}
 				else
 				{
-					_fractpart = modf(((_MTsystemCoordinate + 0.5*_mP.deltaPeriod) / _mP.deltaPeriod), &_intpart);
-					_sitenum = _intpart + 1.0;
-
-					if ((_sitenum > 1.0) && (_sitenum < double(_NumberofMTsites)) && ((0.5 - fabs((_MTsystemCoordinate - (_mP.deltaPeriod*(_sitenum - 1.0))) / _mP.deltaPeriod))<0.01))
-					{
-
-						if (takeFlatRandomNumber() <= 0.5)
-						{
-							_sitenum = _sitenum + 1.0;
-						}
-					}
-					_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*(_sitenum - 1.0);
-					_boundMaps.emplace_back(iter->_mountCoordinate, static_cast<int>(_sitenum), iter->_mountCoordinate - _SurfaceDistanceofiSite);
-					saveStepingMap(_state.currentTime, iter->_mountCoordinate, static_cast<int>(_sitenum));
-					iter = _unboundMaps.erase(iter);
-					//
+					++iter;
 				}
 			}
 
@@ -386,29 +395,43 @@ public:
 			
 			for (auto iter = _unboundKinesins.begin(); iter != _unboundKinesins.end(); ) {
 				_MTsystemCoordinate = iter->_mountCoordinate - _state.MTposition;
-				if ((_MTsystemCoordinate < -0.5*_mP.deltaPeriod) || (_MTsystemCoordinate >(double(_NumberofMTsites) - 0.5)*_mP.deltaPeriod))
+				
+				
+				if ((takeFlatRandomNumber() >  exp(-(_mP.KinesinKon)*_sP.timeStep))||(_mP.useKinesinBindingKon==0.0))
 				{
-					++iter;
+
+					if ((_MTsystemCoordinate < -0.5*_mP.deltaPeriod) || (_MTsystemCoordinate > (double(_NumberofMTsites) - 0.5)*_mP.deltaPeriod))
+					{
+						++iter;
+					}
+					else
+					{
+						_fractpart = modf(((_MTsystemCoordinate + 0.5*_mP.deltaPeriod) / _mP.deltaPeriod), &_intpart);
+						_sitenum = _intpart + 1.0;
+
+						if ((_sitenum > 1.0) && (_sitenum < double(_NumberofMTsites)) && ((0.5 - fabs((_MTsystemCoordinate - (_mP.deltaPeriod*(_sitenum - 1.0))) / _mP.deltaPeriod)) < 0.01))
+						{
+
+							if (takeFlatRandomNumber() <= 0.5)
+							{
+								_sitenum = _sitenum + 1.0;
+							}
+						}
+
+						_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*(_sitenum - 1.0);
+						_boundKinesins.emplace_back(iter->_mountCoordinate, static_cast<int>(_sitenum), iter->_mountCoordinate - _SurfaceDistanceofiSite);
+						saveStepingKinesin(_state.currentTime, iter->_mountCoordinate, static_cast<int>(_sitenum));
+						
+						_everboundedMAPsKinesins = _everboundedMAPsKinesins + 1.0;
+					//	std::cout << _everboundedMAPsKinesins << std::endl;
+						iter = _unboundKinesins.erase(iter);
+						
+						//
+					}
 				}
 				else
 				{
-					_fractpart = modf(((_MTsystemCoordinate + 0.5*_mP.deltaPeriod) / _mP.deltaPeriod), &_intpart);
-					_sitenum = _intpart + 1.0;
-
-					if ((_sitenum > 1.0) && (_sitenum < double(_NumberofMTsites)) && ((0.5 - fabs((_MTsystemCoordinate - (_mP.deltaPeriod*(_sitenum - 1.0))) / _mP.deltaPeriod))<0.01))
-					{
-
-						if (takeFlatRandomNumber() <= 0.5)
-						{
-							_sitenum = _sitenum + 1.0;
-						}
-					}
-
-					_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*(_sitenum - 1.0);
-					_boundKinesins.emplace_back(iter->_mountCoordinate, static_cast<int>(_sitenum), iter->_mountCoordinate - _SurfaceDistanceofiSite);
-					saveStepingKinesin(_state.currentTime, iter->_mountCoordinate, static_cast<int>(_sitenum));
-					iter = _unboundKinesins.erase(iter);
-					//
+					++iter;
 				}
 			}
 
@@ -433,9 +456,12 @@ public:
 
 							if (takeFlatRandomNumber() > exp((-(_KinesinunbindProbability)*_sP.timeStep)))
 							{
+								saveStepingKinesin(_state.currentTime, iter->_mountCoordinate,iter->_MTsite);
+								std::cout << "this kinesin was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << iter->_springLength*_mP.KINESINstiffness << "pN" << std::endl;
 								_unboundKinesins.emplace_back(iter->_mountCoordinate);
 								iter = _boundKinesins.erase(iter);
-								std::cout << "this kinesin was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << iter->_springLength*_mP.KINESINstiffness << "pN" << std::endl;
+								
+								
 
 							}
 							else
@@ -594,10 +620,11 @@ public:
 				}
 				////
 				// stop simulation if no MAPs and Kinesins bound, but only if parameter stopSimIfNoMAPsKinesins set to 1.0
-				if (_initC.stopSimIfNoMAPsKinesins == 1.0)
+				if ((_initC.stopSimIfNoMAPsKinesins == 1.0) && (_everboundedMAPsKinesins > 0.0))
 				{
 					if ((_boundKinesins.size()==0)&&(_boundMaps.size()==0))
 					{
+						
 						// basic coordinates log
 						writeStateTolog();
 						return "Calculations aborted at simulation time " + std::to_string(_state.currentTime) + " due to no MAPs and Kinesins left on the MT and stopSimIfNoMAPsKinesins is on";
@@ -679,6 +706,7 @@ private:
 	double  _fractpart, _intpart;
 	double _KinesinunbindProbability;
 	double _sitenum;
+	double _everboundedMAPsKinesins;
 	
 public:
 	int _testFlatBufferSizeFreq = 10;//iteration beetween tests

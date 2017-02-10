@@ -50,6 +50,12 @@ struct ModelParameters
 	double kinesinForceUnbindingFd;
 	double numberMAPsInOneSite;
 	double numberKinesinsInOneSite;
+	double useKinesinBindingKon;
+	double useMAPBindingKon;
+	double KinesinKon;
+	double MAPKon;
+
+
 };
 
 struct SystemState

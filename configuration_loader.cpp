@@ -108,6 +108,27 @@ Configuration assign_config_from_json(Configuration conf, json jsonobj) {
 	if (!(jsonobj["ModelParameters"]["numberKinesinsInOneSite"].empty())) {
 		conf.modelParameters.numberKinesinsInOneSite = stod(jsonobj["ModelParameters"]["numberKinesinsInOneSite"].get<std::string>());
 	}
+
+	
+
+	if (!(jsonobj["ModelParameters"]["useKinesinBindingKon"].empty())) {
+		conf.modelParameters.useKinesinBindingKon = stod(jsonobj["ModelParameters"]["useKinesinBindingKon"].get<std::string>());
+	}
+	if (!(jsonobj["ModelParameters"]["useMAPBindingKon"].empty())) {
+		conf.modelParameters.useMAPBindingKon = stod(jsonobj["ModelParameters"]["useMAPBindingKon"].get<std::string>());
+	}
+	
+	if (!(jsonobj["ModelParameters"]["KinesinKon"].empty())) {
+		conf.modelParameters.KinesinKon = stod(jsonobj["ModelParameters"]["KinesinKon"].get<std::string>());
+	}
+	if (!(jsonobj["ModelParameters"]["MAPKon"].empty())) {
+		conf.modelParameters.MAPKon = stod(jsonobj["ModelParameters"]["MAPKon"].get<std::string>());
+	}
+
+
+
+
+
 	
 	//// Assign Initial Conditions from json
 	if (!(jsonobj["InitialConditions"]["MAPdistance"].empty())) {
