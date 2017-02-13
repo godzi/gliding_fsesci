@@ -56,7 +56,7 @@ struct ModelParameters
 	double MAPKon;
 	double MAPKoff;
 	double MAPfsmParforKoff;
-
+	double kinesinDparam;
 };
 
 struct SystemState

@@ -61,22 +61,6 @@ double mod(double a, double N)
 	return a - N*floor(a / N); //return in range [0, N)
 }
 
-class KINESINvLoaded
-{
-public:
-	double vUnloaded =0.0;
-	double Fstall =0.0;
-	double omega =0.0;
-	double kinesinPparam = 0.0;
-	double forceVelocityOn = 1.0;
-	double calc(double Force) const
-	{
-		//
-		//return vUnloaded*(1 - (pow((Force / Fstall) , omega)));
-		return  forceVelocityOn*(vUnloaded / (kinesinPparam + ((1 - kinesinPparam)*exp(Force*2.79 / 4.11))))+(1.0- forceVelocityOn)*vUnloaded;
-		
-	}
-};
 
 class boundKINESIN
 {
@@ -137,6 +121,19 @@ public:
 	int countTotalSteps() {
 		return (int)ceil(_sP.totalTime / _sP.timeStep);
 	}
+
+
+	// kinesin force velocity
+	double calcKinesinVelocity(double Force) const
+	{
+		
+		return  _mP.forceVelocityOn*(_mP.vUnloaded / (_mP.kinesinPparam + ((1 - _mP.kinesinPparam)*exp(Force*_mP.kinesinDparam / (kBoltz*_mP.T))))) + (1.0 - _mP.forceVelocityOn)*_mP.vUnloaded;
+
+	}
+
+
+
+
 	void saveStepingMap(double time, double proteinMountCoordinate,int MTsiteNum ) {
 	//	std::cout << proteinMountCoordinate << " " << _initC.MonitorMAP << std::endl;
 		/*if ((fabs(proteinMountCoordinate - _initC.MonitorMAP)) <= _initC.MAPdistance / 2) {
@@ -167,11 +164,7 @@ public:
 		_NumberofMTsites = (int)floor(_initC.MTlength / _mP.deltaPeriod);
 		
 		
-		_kinesinvLoaded.vUnloaded = _mP.vUnloaded;
-		_kinesinvLoaded.Fstall = _mP.Fstall;
-		_kinesinvLoaded.omega = _mP.omega;
-		_kinesinvLoaded.kinesinPparam = _mP.kinesinPparam;
-		_kinesinvLoaded.forceVelocityOn = _mP.forceVelocityOn;
+		
 		/// Initial binding
 		
 		if(_initC.oldInitialMount==1.0) 
@@ -592,7 +585,7 @@ public:
 					
 					//std::cout << "iter->_springLength*_mP.KINESINstiffness " << iter->_springLength*_mP.KINESINstiffness << std::endl;
 					//
-					double pstep =exp(-_kinesinvLoaded.calc((springForce(_mP.KINESINstiffness, iter->_springLength)))*(_sP.timeStep / (2 * _mP.deltaPeriod)));
+					double pstep =exp(-calcKinesinVelocity((springForce(_mP.KINESINstiffness, iter->_springLength)))*(_sP.timeStep / (2 * _mP.deltaPeriod)));
 					if (takeFlatRandomNumber() > pstep)
 					{
 						//make step (always 2 site periods to the plus end of MT therefore to higher site number)
@@ -709,7 +702,7 @@ private:
 	std::vector<std::unique_ptr<BinaryFileLogger>> _loggers;
 	
 	//
-	KINESINvLoaded _kinesinvLoaded;
+	
 	////
 	int _NumberofMTsites;
 	/*std::vector <double> _KINESINMountsites;

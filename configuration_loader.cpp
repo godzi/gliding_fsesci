@@ -131,8 +131,10 @@ Configuration assign_config_from_json(Configuration conf, json jsonobj) {
 	if (!(jsonobj["ModelParameters"]["MAPfsmParforKoff"].empty())) {
 		conf.modelParameters.MAPfsmParforKoff = stod(jsonobj["ModelParameters"]["MAPfsmParforKoff"].get<std::string>());
 	}
-
-
+	
+	if (!(jsonobj["ModelParameters"]["kinesinDparam"].empty())) {
+		conf.modelParameters.kinesinDparam = stod(jsonobj["ModelParameters"]["kinesinDparam"].get<std::string>());
+	}
 
 	
 	//// Assign Initial Conditions from json
