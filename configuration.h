@@ -102,6 +102,7 @@ struct InitialConditions
 	double oldInitialMount;
 	double numberKinesins;
 	double numberMAPs;
+	double useKinesinOneparams;
 };
 // Composition of parameters
 struct Configuration

@@ -199,8 +199,9 @@ Configuration assign_config_from_json(Configuration conf, json jsonobj) {
 	if (!(jsonobj["InitialConditions"]["numberMAPs"].empty())) {
 		conf.initialConditions.numberMAPs = stod(jsonobj["InitialConditions"]["numberMAPs"].get<std::string>());
 	}
-	
-
+	if (!(jsonobj["InitialConditions"]["useKinesinOneparams"].empty())) {
+		conf.initialConditions.useKinesinOneparams = stod(jsonobj["InitialConditions"]["useKinesinOneparams"].get<std::string>());
+	}
 
 	//// Assign Dynamic Coordinates from json initial conditions
 	if (!(jsonobj["InitialConditions"]["MTposition"].empty())) {

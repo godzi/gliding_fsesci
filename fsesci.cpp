@@ -127,7 +127,11 @@ public:
 	double calcKinesinVelocity(double Force) const
 	{
 		
-		return  _mP.forceVelocityOn*(_mP.vUnloaded / (_mP.kinesinPparam + ((1 - _mP.kinesinPparam)*exp(Force*_mP.kinesinDparam / (kBoltz*_mP.T))))) + (1.0 - _mP.forceVelocityOn)*_mP.vUnloaded;
+		
+			//
+			return  _mP.forceVelocityOn*(_mP.vUnloaded / (_mP.kinesinPparam + ((1 - _mP.kinesinPparam)*exp(Force*_mP.kinesinDparam / (kBoltz*_mP.T))))) + (1.0 - _mP.forceVelocityOn)*_mP.vUnloaded;
+		
+		
 
 	}
 
@@ -472,7 +476,24 @@ public:
 							// update spring extensions based on previous microtubule step
 							_currentSpringLength=iter->_springLength + _state.MTpositionStep;
 						
-							_KinesinunbindProbability = 1 / (_mP.kinesinForceUnbindingA*exp(-fabs(_currentSpringLength*_mP.KINESINstiffness / _mP.kinesinForceUnbindingFd)));
+							if (_initC.useKinesinOneparams==1.0)
+							{
+								//use kinesin-1 params
+								if ((_currentSpringLength*_mP.KINESINstiffness) <= 0)
+								{
+									_KinesinunbindProbability = 0.79 + 1.56*(-_currentSpringLength*_mP.KINESINstiffness);
+								}
+								else
+								{
+									_KinesinunbindProbability = 0.79*exp(_currentSpringLength*_mP.KINESINstiffness/6.1);
+								}
+								
+							}
+							else
+							{
+								//use kinesin CENP-E params
+								_KinesinunbindProbability = 1 / (_mP.kinesinForceUnbindingA*exp(-fabs(_currentSpringLength*_mP.KINESINstiffness / _mP.kinesinForceUnbindingFd)));
+							}
 
 							if (takeFlatRandomNumber() > exp((-(_KinesinunbindProbability)*_sP.timeStep)))
 							{
