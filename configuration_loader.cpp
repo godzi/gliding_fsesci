@@ -202,6 +202,12 @@ Configuration assign_config_from_json(Configuration conf, json jsonobj) {
 	if (!(jsonobj["InitialConditions"]["useKinesinOneparams"].empty())) {
 		conf.initialConditions.useKinesinOneparams = stod(jsonobj["InitialConditions"]["useKinesinOneparams"].get<std::string>());
 	}
+	if (!(jsonobj["InitialConditions"]["watchMAPsCircularBuffer"].empty())) {
+		conf.initialConditions.watchMAPsCircularBuffer = stod(jsonobj["InitialConditions"]["watchMAPsCircularBuffer"].get<std::string>());
+	}
+	if (!(jsonobj["InitialConditions"]["watchKinesinsCircularBuffer"].empty())) {
+		conf.initialConditions.watchKinesinsCircularBuffer = stod(jsonobj["InitialConditions"]["watchKinesinsCircularBuffer"].get<std::string>());
+	}
 
 	//// Assign Dynamic Coordinates from json initial conditions
 	if (!(jsonobj["InitialConditions"]["MTposition"].empty())) {

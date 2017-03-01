@@ -103,6 +103,9 @@ struct InitialConditions
 	double numberKinesins;
 	double numberMAPs;
 	double useKinesinOneparams;
+
+	double watchMAPsCircularBuffer;
+	double watchKinesinsCircularBuffer;
 };
 // Composition of parameters
 struct Configuration

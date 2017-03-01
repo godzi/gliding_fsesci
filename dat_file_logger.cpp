@@ -13,7 +13,10 @@ DatFileLogger::DatFileLogger(LoggerParameters loggerParams, std::string coordina
 		}
 	
 	}
-
+DatFileLogger::~DatFileLogger()
+{
+	_file.close();
+}
 void DatFileLogger::save(const std::string& dataToLog) {
 	_file << dataToLog;
 	}
