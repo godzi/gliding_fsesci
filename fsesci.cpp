@@ -108,7 +108,9 @@ public:
 		_kinesinStepsLog{ configuration.loggerParameters, "kinesinstepslog" },
 		_MAPStepsLog{ configuration.loggerParameters, "mapstepslog" },
 		_kinesinCoordsLog{ configuration.loggerParameters, "kinecoordslog" },
-		_MAPCoordsLog{ configuration.loggerParameters, "mapcoordslog" }
+		_MAPCoordsLog{ configuration.loggerParameters, "mapcoordslog" },
+		_kinesinPosLog{ configuration.loggerParameters, "kinposlog" },
+		_MAPPosLog{ configuration.loggerParameters, "mapposlog" }
 	{
 		const auto& loggerParameters = configuration.loggerParameters;
 		auto callback = [this, &loggerParameters](double(SystemState::* field), std::string fieldName) {
@@ -138,6 +140,12 @@ public:
 	}
 
 
+	void saveMapPosition(std::string positions) {
+		_MAPPosLog.save(positions);
+	}
+	void saveKinesinPosition(std::string positions) {
+		_kinesinPosLog.save(positions);
+	}
 
 
 	void saveStepingMap(double time, double proteinMountCoordinate,int MTsiteNum,int mstate ) {
@@ -159,6 +167,12 @@ public:
 					_MAPStepsLog.save(_saveStepingMapBuffer);
 				}
 				_saveStepingMapBuffer = "";
+				for (auto iter = _boundMaps.begin(); iter != _boundMaps.end(); )
+				{
+					saveStepingMap(_state.currentTime, iter->_mountCoordinate, iter->_MTsite, 0);
+					++iter;
+				}
+				
 			}
 			
 		}
@@ -180,6 +194,11 @@ public:
 					_kinesinStepsLog.save(_saveStepingKinesinBuffer);
 				}
 				_saveStepingKinesinBuffer = "";
+				for (auto iter = _boundKinesins.begin(); iter != _boundKinesins.end(); )
+				{
+					saveStepingKinesin(_state.currentTime, iter->_mountCoordinate, iter->_MTsite, 0);
+					++iter;
+				}
 			}
 		}
 	}
@@ -467,8 +486,13 @@ public:
 				}
 			}
 
-
-
+			// update spring extensions based on previous microtubule step
+					//Update spring liength for MAPs (not to do it in stepping or unbinding)
+					for (auto iter = _boundMaps.begin(); iter != _boundMaps.end(); )
+					{
+						iter->_springLength = iter->_springLength + _state.MTpositionStep;
+						++iter;
+					}
 
 					//Update spring liength for kinesins (not to do it in stepping or unbinding)
 					for (auto iter = _boundKinesins.begin(); iter != _boundKinesins.end(); )
@@ -481,8 +505,8 @@ public:
 					if (_initC.MAPUnbinding == 1.0)
 					{
 						for (auto iter = _boundMaps.begin(); iter != _boundMaps.end(); ) {
-							// update spring extensions based on previous microtubule step
-							_currentSpringLength = iter->_springLength + _state.MTpositionStep;
+							
+							
 
 							_MAPsunbindProbability = _mP.MAPKoff*exp(fabs(_currentSpringLength)*_mP.MAPfsmParforKoff/ (kBoltz*_mP.T));
 
@@ -508,8 +532,7 @@ public:
 					if (_initC.kinesinUnbinding==1.0)
 					{
 						for (auto iter = _boundKinesins.begin(); iter != _boundKinesins.end(); ) {
-							// update spring extensions based on previous microtubule step
-							_currentSpringLength=iter->_springLength + _state.MTpositionStep;
+							
 						
 							if (_initC.useKinesinOneparams==1.0)
 							{
@@ -548,11 +571,25 @@ public:
 					}
 					
 				/// Test for stepping for MT bound MAPs AND UPDATE SPRING EXTENSION LENGTHS
-		
+						//// save position
+						if (taskIteration %_sP.saveFrequency == 0) {
+							_positionstosave = std::to_string(_state.MTposition) +"	"+std::to_string(_state.currentTime)+"	";
+						}
+						////
 				for (auto iter = _boundMaps.begin(); iter != _boundMaps.end(); ) {
 					
-					// update spring extensions based on previous microtubule step
-					iter->_springLength = iter->_springLength +  _state.MTpositionStep;
+					
+					
+					
+
+					///// saving position log  
+					if (taskIteration %_sP.saveFrequency == 0) {
+						_positionstosave = _positionstosave + std::to_string((iter->_mountCoordinate + iter->_springLength)) + "	";						
+					}
+
+					/////
+					
+
 					//std::cout << "iter->_springLength*_mP.MAPstiffness " << iter->_springLength*_mP.MAPstiffness << std::endl;
 					///
 					_kprob = _mP.MAPsDiffusion / (_mP.deltaPeriod*_mP.deltaPeriod);
@@ -633,9 +670,28 @@ public:
 
 				}
 				////
+				///// saving position log  saveMapPosition
+				if (taskIteration %_sP.saveFrequency == 0) {
+					_positionstosave = _positionstosave + "\n";
+					saveMapPosition(_positionstosave);
+					_positionstosave = std::to_string(_state.MTposition) + "	"+std::to_string(_state.currentTime) + "	";
+				}
+
+				/////
+
+
+
+				////
 				/// Test for stepping for MT bound MT kinesins AND UPDATE SPRING EXTENSION LENGTHS
 				for (auto iter = _boundKinesins.begin(); iter != _boundKinesins.end(); ) {
-					// update spring extensions based on previous microtubule step
+					
+
+					///// saving position log  
+					if (taskIteration %_sP.saveFrequency == 0) {
+						_positionstosave = _positionstosave + std::to_string((iter->_mountCoordinate + iter->_springLength)) + "	";
+					}
+
+					/////
 					
 					
 					
@@ -677,7 +733,13 @@ public:
 						++iter;
 					}
 				}
-
+				/// save Kinesin positions log
+				if (taskIteration %_sP.saveFrequency == 0) {
+					_positionstosave = _positionstosave + "\n";
+					saveKinesinPosition(_positionstosave);
+					_positionstosave = "";
+				}
+				////
 		//////
 				// stop simulations if forces too high
 				if ((fabs(_state.SummMAPForces)>1000000.0))
@@ -795,6 +857,11 @@ private:
 
 	DatFileLogger _kinesinCoordsLog; // log of initial mounting
 	DatFileLogger _MAPCoordsLog; //log of initial mounting
+
+	DatFileLogger _kinesinPosLog;
+	DatFileLogger _MAPPosLog;
+	std::string _positionstosave="";
+
 	int _saveStepingMapCounter = 0;
 	int _saveStepingKinesinCounter = 0;
 	std::string _saveStepingMapBuffer="";
