@@ -65,36 +65,42 @@ double mod(double a, double N)
 class boundKINESIN
 {
 public:
-	boundKINESIN(double coordinate, int MTsite, double springLength) :_mountCoordinate{ coordinate }, _MTsite{ MTsite }, _springLength{ springLength }
+	boundKINESIN(double coordinate, int MTsite, double springLength, int id) :_mountCoordinate{ coordinate }, _MTsite{ MTsite }, _springLength{ springLength }, _id{ id }
 	{	};
 	double _mountCoordinate;
 	int _MTsite;
 	double _springLength;
+	int _id;
 };
 class unboundKINESIN
 {
 public:
-	unboundKINESIN(double coordinate) {
+	unboundKINESIN(double coordinate, int id) {
 		_mountCoordinate = coordinate;
+		_id = id;
 	}
 	double _mountCoordinate;
+	int _id;
 };
 class boundMAP
 {
 public:
-	boundMAP(double coordinate, int MTsite, double springLength) :_mountCoordinate{ coordinate }, _MTsite{ MTsite }, _springLength{ springLength }
+	boundMAP(double coordinate, int MTsite, double springLength, int id) :_mountCoordinate{ coordinate }, _MTsite{ MTsite }, _springLength{ springLength }, _id{ id }
 	{	};
 	double _mountCoordinate;
 	int _MTsite;
 	double _springLength;
+	int _id;
 };
 class unboundMAP
 {
 public:
-	unboundMAP(double coordinate) {
+	unboundMAP(double coordinate, int id) {
 		_mountCoordinate = coordinate;
+		_id = id;
 	}
 	double _mountCoordinate;
+	int _id;
 };
 
 class Task
@@ -105,10 +111,10 @@ public:
 		_mP( configuration.modelParameters ),
 		_initC( configuration.initialConditions ),
 		_state( configuration.initialConditions.initialState ),
+		_loggerparams(configuration.loggerParameters),
 		_kinesinStepsLog{ configuration.loggerParameters, "kinesinstepslog" },
 		_MAPStepsLog{ configuration.loggerParameters, "mapstepslog" },
-		_kinesinCoordsLog{ configuration.loggerParameters, "kinecoordslog" },
-		_MAPCoordsLog{ configuration.loggerParameters, "mapcoordslog" },
+		_performanceLog{ _loggerparams, "performancelog" },
 		_kinesinPosLog{ configuration.loggerParameters, "kinposlog" },
 		_MAPPosLog{ configuration.loggerParameters, "mapposlog" }
 	{
@@ -130,13 +136,8 @@ public:
 	// kinesin force velocity
 	double calcKinesinVelocity(double Force) const
 	{
-		
-		
 			//
 			return  _mP.forceVelocityOn*(_mP.vUnloaded / (_mP.kinesinPparam + ((1 - _mP.kinesinPparam)*exp(Force*_mP.kinesinDparam / (kBoltz*_mP.T))))) + (1.0 - _mP.forceVelocityOn)*_mP.vUnloaded;
-		
-		
-
 	}
 
 
@@ -213,7 +214,19 @@ public:
 		_NumberofMTsites = (int)floor(_initC.MTlength / _mP.deltaPeriod);
 		
 		
+		// loggers for initial binding
+
 		
+		DatFileLogger* kinesinCoordsLog;
+		DatFileLogger* MAPCoordsLog;
+			
+		kinesinCoordsLog=new DatFileLogger(_loggerparams, "kinecoordslog"); // log of initial mounting
+		MAPCoordsLog = new DatFileLogger(_loggerparams, "mapcoordslog"); //log of initial mounting
+		
+		
+		/////
+		/////
+
 		/// Initial binding
 		
 		if(_initC.oldInitialMount==1.0) 
@@ -221,16 +234,16 @@ public:
 			for (double place = 0.0 + _initC.surfaceKINESINstartPoint; place < _initC.surfaceLength; place = place + _initC.KINESINdistance) {
 				for (double ind = _mP.numberKinesinsInOneSite; ind >= 1.0; ind--)
 				{
-					_unboundKinesins.emplace_back(place - (ind - 1.0)*(0.001 / _mP.numberKinesinsInOneSite));
-					_kinesinCoordsLog.save(std::to_string( place - (ind - 1.0)*(0.001 / _mP.numberKinesinsInOneSite))+"\n");
+					_unboundKinesins.emplace_back(place - (ind - 1.0)*(0.001 / _mP.numberKinesinsInOneSite), (int)ind);
+					kinesinCoordsLog->save(std::to_string((int)ind) +"	" +std::to_string( place - (ind - 1.0)*(0.001 / _mP.numberKinesinsInOneSite))  +"	");
 					
 				}
 			}
 			for (double place = 0.0 + _initC.surfaceMAPstartPoint; place < _initC.surfaceLength; place = place + _initC.MAPdistance) {
 				for (double ind = _mP.numberMAPsInOneSite; ind >= 1.0; ind--)
 				{
-					_unboundMaps.emplace_back(place - (ind - 1.0)*(0.001 / _mP.numberMAPsInOneSite));
-					_MAPCoordsLog.save(std::to_string(place - (ind - 1.0)*(0.001 / _mP.numberMAPsInOneSite)) + "\n");
+					_unboundMaps.emplace_back(place - (ind - 1.0)*(0.001 / _mP.numberMAPsInOneSite), (int)ind);
+					MAPCoordsLog->save(std::to_string((int)ind) + "	" + std::to_string(place - (ind - 1.0)*(0.001 / _mP.numberMAPsInOneSite)) + "	");
 				}
 			}
 		}
@@ -243,23 +256,23 @@ public:
 			for (double ind = 0.0; ind < _initC.numberKinesins; ind++)
 			{
 				mountcoord = get_uniform_rnd_forMounts(_initC.surfaceKINESINstartPoint, _initC.surfaceLength);
-				_unboundKinesins.emplace_back(mountcoord);
-				_kinesinCoordsLog.save(std::to_string(mountcoord) + "\n");
+				_unboundKinesins.emplace_back(mountcoord,(int)ind);
+				kinesinCoordsLog->save(std::to_string((int)ind) + "	" + std::to_string(mountcoord) + "	");
 			}
 			//MAPs binding
 			for (double ind = 0.0; ind < _initC.numberMAPs; ind++)
 			{
 				mountcoord = get_uniform_rnd_forMounts(_initC.surfaceMAPstartPoint, _initC.surfaceLength);
-				_unboundMaps.emplace_back(mountcoord);
-				_MAPCoordsLog.save(std::to_string(mountcoord) + "\n");
+				_unboundMaps.emplace_back(mountcoord,(int)ind);
+				MAPCoordsLog->save(std::to_string((int)ind) + "	" + std::to_string(mountcoord)  + "	");
 			}
 
 
 		}
 
 
-		
-		
+		delete MAPCoordsLog;
+		delete kinesinCoordsLog;
 
 		
 	//	std::cout << "_unboundKinesins.size= " << _unboundKinesins.size() << std::endl;
@@ -272,45 +285,6 @@ public:
 		
 		
 
-		/// test for binding
-/*
-		for (int i = 1; i <= _NumberofMTsites; i++) {
-
-			_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*(static_cast<double>(i) - 1.0);
-
-			//std::cout << "_unboundMaps.size() = " << _unboundMaps.size() << std::endl;
-			//std::cout << "iter->_mountCoordinate = " << _unboundMaps.begin()->_mountCoordinate << std::endl;
-			for (auto iter = _unboundMaps.begin(); iter != _unboundMaps.end(); ) {
-				// std::cout << "MAPS iter-> = " << iter- _unboundMaps.begin() << std::endl;
-				//	std::cout << i << " "<< iter - _unboundMaps.begin() << " " << iter->_mountCoordinate << " " << _SurfaceDistanceofiSite << " " << ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= (_mP.deltaPeriod / 2.0))  << std::endl;
-				if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= 1.01*(_mP.deltaPeriod / 2.0)) {
-					_boundMaps.emplace_back(iter->_mountCoordinate, i, iter->_mountCoordinate - _SurfaceDistanceofiSite);
-					saveStepingMap(0.0, iter->_mountCoordinate, i);
-					iter = _unboundMaps.erase(iter);
-
-				}
-				else
-				{
-					++iter;
-				}
-			}
-			for (auto iter = _unboundKinesins.begin(); iter != _unboundKinesins.end(); ) {
-				if ((fabs(iter->_mountCoordinate - _SurfaceDistanceofiSite)) <= 1.01* (_mP.deltaPeriod / 2.0)) {
-					_boundKinesins.emplace_back(iter->_mountCoordinate, i, iter->_mountCoordinate - _SurfaceDistanceofiSite);
-					saveStepingKinesin(0.0, iter->_mountCoordinate, i);
-					iter = _unboundKinesins.erase(iter);
-
-				}
-				else
-				{
-					++iter;
-				}
-			}
-
-		}
-	
-
-	*/
 	//	std::cout << "_boundKinesins.size() = " << _boundKinesins.size() << std::endl;
 	//	std::cout << "_boundMaps.size() = " << _boundMaps.size() << std::endl;
 		return neededFlatBufferSize;
@@ -351,7 +325,7 @@ public:
 
 		auto takeNormalRandomNumber = [rndNormalNumbers,&counterNormalRandomNumber,gaussGenerator,  this] () -> double {
 			
-			if (counterNormalRandomNumber == _optimalGaussianBuffer) {
+			if (counterNormalRandomNumber == _optimalGaussianBuffer-1) {
 				gaussGenerator->generateNumbers();
 				//std::cout << ", NormalRandomCounter = " << counterNormalRandomNumber << std::endl;
 				counterNormalRandomNumber = 0;
@@ -361,7 +335,7 @@ public:
 		};
 		auto takeFlatRandomNumber = [rndFlatNumbers, &counterFlatRandomNumber, flatGenerator, this]() -> double {
 			//std::cout << counterFlatRandomNumber << " " << rndFlatNumbers[counterFlatRandomNumber] << std::endl;
-			if (counterFlatRandomNumber == _optimalFlatBuffer) {
+			if (counterFlatRandomNumber == _optimalFlatBuffer-1) {
 				flatGenerator->generateNumbers();
 			//	std::cout << ", FlatRandomCounter = " << counterFlatRandomNumber << std::endl;
 				counterFlatRandomNumber = 0;
@@ -371,10 +345,6 @@ public:
 		
 
 
-		// Sites on MT to be checked for new bindings every iteration
-		//int sitestocheck[6] = { 1, 2, 3, _NumberofMTsites-2,_NumberofMTsites-1,_NumberofMTsites };
-		int sitestocheck[18] = { 1, 2, 3,4,5,6,7,8,9, _NumberofMTsites - 8,_NumberofMTsites - 7,_NumberofMTsites-6, _NumberofMTsites - 5,_NumberofMTsites - 4,_NumberofMTsites - 3,_NumberofMTsites - 2,_NumberofMTsites - 1,_NumberofMTsites - 0};
-		///
 		
 		///
 		/// Code below for single iteration
@@ -382,6 +352,11 @@ public:
 		_state.currentTime = 0.0;
 		_everboundedMAPsKinesins = 0.0;
 		for (unsigned taskIteration = 0; taskIteration < nSteps; taskIteration++) {
+		
+			// benchmark
+			auto begin = std::chrono::high_resolution_clock::now();
+			// benchmark
+			
 			_currentstep = taskIteration;
 			_state.currentTime += _sP.timeStep;
 			_state.SummKINESINForces = 0.0;
@@ -428,7 +403,7 @@ public:
 							}
 						}
 						_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*(_sitenum - 1.0);
-						_boundMaps.emplace_back(iter->_mountCoordinate, static_cast<int>(_sitenum), iter->_mountCoordinate - _SurfaceDistanceofiSite);
+						_boundMaps.emplace_back(iter->_mountCoordinate, static_cast<int>(_sitenum), iter->_mountCoordinate - _SurfaceDistanceofiSite,iter->_id);
 						saveStepingMap(_state.currentTime, iter->_mountCoordinate, static_cast<int>(_sitenum),1);
 						_everboundedMAPsKinesins = _everboundedMAPsKinesins + 1.0;
 						iter = _unboundMaps.erase(iter);
@@ -470,7 +445,7 @@ public:
 						}
 
 						_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*(_sitenum - 1.0);
-						_boundKinesins.emplace_back(iter->_mountCoordinate, static_cast<int>(_sitenum), iter->_mountCoordinate - _SurfaceDistanceofiSite);
+						_boundKinesins.emplace_back(iter->_mountCoordinate, static_cast<int>(_sitenum), iter->_mountCoordinate - _SurfaceDistanceofiSite,iter->_id);
 						saveStepingKinesin(_state.currentTime, iter->_mountCoordinate, static_cast<int>(_sitenum),1);
 						
 						_everboundedMAPsKinesins = _everboundedMAPsKinesins + 1.0;
@@ -514,7 +489,7 @@ public:
 							{
 								saveStepingMap(_state.currentTime, iter->_mountCoordinate, iter->_MTsite,-1);
 								std::cout << "this MAP was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << iter->_springLength*_mP.MAPstiffness << "pN" << std::endl;
-								_unboundMaps.emplace_back(iter->_mountCoordinate);
+								_unboundMaps.emplace_back(iter->_mountCoordinate,iter->_id);
 								iter = _boundMaps.erase(iter);
 
 
@@ -557,7 +532,7 @@ public:
 							{
 								saveStepingKinesin(_state.currentTime, iter->_mountCoordinate,iter->_MTsite,-1);
 								std::cout << "this kinesin was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << _currentSpringLength*_mP.KINESINstiffness << "pN" << std::endl;
-								_unboundKinesins.emplace_back(iter->_mountCoordinate);
+								_unboundKinesins.emplace_back(iter->_mountCoordinate, iter->_id);
 								iter = _boundKinesins.erase(iter);
 								
 								
@@ -573,7 +548,8 @@ public:
 				/// Test for stepping for MT bound MAPs AND UPDATE SPRING EXTENSION LENGTHS
 						//// save position
 						if (taskIteration %_sP.saveFrequency == 0) {
-							_positionstosave = std::to_string(_state.MTposition) +"	"+std::to_string(_state.currentTime)+"	";
+						//	_positionstosave = std::to_string(_state.MTposition) +"	"+std::to_string(_state.currentTime)+"	";
+							_positionstosave = "";
 						}
 						////
 				for (auto iter = _boundMaps.begin(); iter != _boundMaps.end(); ) {
@@ -584,7 +560,7 @@ public:
 
 					///// saving position log  
 					if (taskIteration %_sP.saveFrequency == 0) {
-						_positionstosave = _positionstosave + std::to_string((iter->_mountCoordinate + iter->_springLength)) + "	";						
+						_positionstosave = _positionstosave + std::to_string((iter->_id)) + "	"+std::to_string((iter->_MTsite)) + "	";
 					}
 
 					/////
@@ -620,7 +596,7 @@ public:
 							{
 								if(takeFlatRandomNumber()<=_mP.MAPunbindBorderFreq)
 								{
-									_unboundMaps.emplace_back(iter->_mountCoordinate);
+									_unboundMaps.emplace_back(iter->_mountCoordinate, iter->_id);
 									iter = _boundMaps.erase(iter);
 								}
 								else
@@ -650,7 +626,7 @@ public:
 							{
 								if (takeFlatRandomNumber() <= _mP.MAPunbindBorderFreq)
 								{
-									_unboundMaps.emplace_back(iter->_mountCoordinate);
+									_unboundMaps.emplace_back(iter->_mountCoordinate, iter->_id);
 									iter = _boundMaps.erase(iter);
 								}
 								else
@@ -674,7 +650,8 @@ public:
 				if (taskIteration %_sP.saveFrequency == 0) {
 					_positionstosave = _positionstosave + "\n";
 					saveMapPosition(_positionstosave);
-					_positionstosave = std::to_string(_state.MTposition) + "	"+std::to_string(_state.currentTime) + "	";
+					_positionstosave = "";
+					//_positionstosave = std::to_string(_state.MTposition) + "	"+std::to_string(_state.currentTime) + "	";
 				}
 
 				/////
@@ -688,7 +665,7 @@ public:
 
 					///// saving position log  
 					if (taskIteration %_sP.saveFrequency == 0) {
-						_positionstosave = _positionstosave + std::to_string((iter->_mountCoordinate + iter->_springLength)) + "	";
+						_positionstosave = _positionstosave + std::to_string((iter->_id)) + "	" + std::to_string((iter->_MTsite)) + "	";
 					}
 
 					/////
@@ -717,7 +694,7 @@ public:
 						{
 							if (takeFlatRandomNumber() <= _mP.KinesinunbindBorderFreq)
 							{
-								_unboundKinesins.emplace_back(iter->_mountCoordinate);
+								_unboundKinesins.emplace_back(iter->_mountCoordinate, iter->_id);
 								iter = _boundKinesins.erase(iter);
 							}
 							else
@@ -781,7 +758,20 @@ public:
 			_state.BoundedKinesins=_boundKinesins.size();
 			_state.BoundedMAPs = _boundMaps.size();
 			
+			// benchmark
+			auto end = std::chrono::high_resolution_clock::now();
+
+
+			_timebenchmark = _timebenchmark + (double)std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin).count();
+			// benchmark
+
+
 			if (taskIteration %_sP.saveFrequency == 0) {
+
+				//benchmark log
+				
+					_performanceLog.save(std::to_string(_timebenchmark / _sP.saveFrequency) + "\n");
+				_timebenchmark = 0.0;
 				// basic coordinates log
 				writeStateTolog();
 				// extnded stepping log if selected
@@ -801,6 +791,11 @@ public:
 				///
 				
 			}
+
+			
+			
+			
+			
 		}
 		return "No errors encountered";
 	}
@@ -817,22 +812,16 @@ public:
 	}
 
 private:
-	
+	double _timebenchmark=0.0;
 	const SimulationParameters _sP;
 	const ModelParameters _mP;
 	const InitialConditions _initC;
+	const LoggerParameters _loggerparams;
 	SystemState _state;
 	std::vector<std::unique_ptr<BinaryFileLogger>> _loggers;
 	
-	//
-	
-	////
 	int _NumberofMTsites;
-	/*std::vector <double> _KINESINMountsites;
-	std::vector <double> _MAPMountsites;
-	std::vector <double> _MAPsitesonMT;
-	std::vector <double> _KINESINsitesonMT;
-	*/
+	
 	std::vector <unboundKINESIN> _unboundKinesins;
 	std::vector <boundKINESIN> _boundKinesins;
 	std::vector <unboundMAP> _unboundMaps;
@@ -855,11 +844,13 @@ private:
 	DatFileLogger _kinesinStepsLog; //log of stepping
 	DatFileLogger _MAPStepsLog;//log of stepping
 
-	DatFileLogger _kinesinCoordsLog; // log of initial mounting
-	DatFileLogger _MAPCoordsLog; //log of initial mounting
+	
 
 	DatFileLogger _kinesinPosLog;
 	DatFileLogger _MAPPosLog;
+
+	DatFileLogger _performanceLog;
+
 	std::string _positionstosave="";
 
 	int _saveStepingMapCounter = 0;
@@ -872,10 +863,8 @@ private:
 	unsigned _currentstep = 0;
 	unsigned _totalsteps = 0;
 public:
-	int _testFlatBufferSizeFreq = 10;//iteration beetween tests
-	int _testGaussBufferSizeFreq = 10000;
-	size_t _optimalGaussianBuffer = 600000;
-	size_t _optimalFlatBuffer = 600000;
+	size_t _optimalGaussianBuffer = 100000;
+	size_t _optimalFlatBuffer = 500000;
 };
 
 
@@ -990,7 +979,7 @@ int main(int argc, char *argv[])
 		
 	//}
 
-			std::cout << " end" << std::endl;
+			//std::cout << " end" << std::endl;
 			std::cout << " end" << std::endl;
 }
 

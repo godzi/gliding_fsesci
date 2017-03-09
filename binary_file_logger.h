@@ -11,7 +11,7 @@ public:
 private:
 	void flush();
 
-	static constexpr std::size_t _buffsize = 4096 / sizeof(double);
+	static constexpr std::size_t _buffsize = 4096 / sizeof(double); //previous buffer 4096
 	std::ofstream _file;
 	double(SystemState::* _loggedField);
 	std::vector <double> _buffer;
