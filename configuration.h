@@ -4,6 +4,8 @@
 #include <vector>
 #include <string>
 
+#include "simulation_agents.h"
+
 // Global parameters of simulations -> define iterations and steps
 struct SimulationParameters
 {
@@ -13,6 +15,15 @@ struct SimulationParameters
 	int saveFrequency;//save evry saveFrequency step
 };
 
+// Parameters to initialize interrupted simulation
+struct InitialSetup
+{
+	std::vector <boundKINESIN> InitialBoundKINESIN;
+	std::vector	<unboundKINESIN> InitialUnboundKINESIN;
+	std::vector	<boundMAP> InitialBoundMAP;
+	std::vector	<unboundMAP> InitialUnboundMAP;
+	
+};
 
 // Classes for objects that store simulation configs: LoggerParameters, ModelParameters, InitialConditions
 struct LoggerParameters

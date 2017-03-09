@@ -253,3 +253,9 @@ std::vector <Configuration> load_configuration(std::string paramInputFilename) {
 	return configurationsVector;
 
 }
+
+//// Initial Setup
+//InitialSetup load_setup(std::string paramInputFilename) {
+
+
+//}

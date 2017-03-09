@@ -30,6 +30,7 @@
 #include "mkl_flat_parallel_generator.h"
 #include "binary_file_logger.h"
 #include "dat_file_logger.h"
+#include "simulation_agents.h"
 
 #include <fstream>
 
@@ -62,46 +63,7 @@ double mod(double a, double N)
 }
 
 
-class boundKINESIN
-{
-public:
-	boundKINESIN(double coordinate, int MTsite, double springLength, int id) :_mountCoordinate{ coordinate }, _MTsite{ MTsite }, _springLength{ springLength }, _id{ id }
-	{	};
-	double _mountCoordinate;
-	int _MTsite;
-	double _springLength;
-	int _id;
-};
-class unboundKINESIN
-{
-public:
-	unboundKINESIN(double coordinate, int id) {
-		_mountCoordinate = coordinate;
-		_id = id;
-	}
-	double _mountCoordinate;
-	int _id;
-};
-class boundMAP
-{
-public:
-	boundMAP(double coordinate, int MTsite, double springLength, int id) :_mountCoordinate{ coordinate }, _MTsite{ MTsite }, _springLength{ springLength }, _id{ id }
-	{	};
-	double _mountCoordinate;
-	int _MTsite;
-	double _springLength;
-	int _id;
-};
-class unboundMAP
-{
-public:
-	unboundMAP(double coordinate, int id) {
-		_mountCoordinate = coordinate;
-		_id = id;
-	}
-	double _mountCoordinate;
-	int _id;
-};
+
 
 class Task
 {
@@ -793,6 +755,8 @@ public:
 				}
 				///
 				
+				
+				
 			}
 
 			
@@ -800,6 +764,61 @@ public:
 			
 			
 		}
+
+		/////// Json Dump of final state
+		_stateDump["MTposition"]= (std::to_string(_state.MTposition));
+		_stateDump["MTpositionStep"] = (std::to_string(_state.MTpositionStep));
+		
+		for (auto iter = _boundMaps.begin(); iter != _boundMaps.end(); )
+		{
+			json f;
+			f["mountCoordinate"] = (std::to_string(iter->_mountCoordinate));
+			f["MTsite"] = (std::to_string(iter->_MTsite));
+			f["springLength"] = (std::to_string(iter->_springLength));
+			f["id"] = (std::to_string(iter->_id));
+			_stateDump["boundMaps"].push_back(f);
+			///////
+			++iter;
+		}
+		for (auto iter = _boundKinesins.begin(); iter != _boundKinesins.end(); )
+		{
+			json f;
+			f["mountCoordinate"] = (std::to_string(iter->_mountCoordinate));
+			f["MTsite"] = (std::to_string(iter->_MTsite));
+			f["springLength"] = (std::to_string(iter->_springLength));
+			f["id"] = (std::to_string(iter->_id));
+			_stateDump["boundKinesins"].push_back(f);
+			/////
+			++iter;
+		}
+		for (auto iter = _unboundMaps.begin(); iter != _unboundMaps.end(); )
+		{
+			json f;
+			f["mountCoordinate"] = (std::to_string(iter->_mountCoordinate));
+			f["id"] = (std::to_string(iter->_id));
+			_stateDump["unboundMaps"].push_back(f);
+			///////
+			++iter;
+		}
+		for (auto iter = _unboundKinesins.begin(); iter != _unboundKinesins.end(); )
+		{
+			json f;
+			f["mountCoordinate"] = (std::to_string(iter->_mountCoordinate));
+			f["id"] = (std::to_string(iter->_id));
+			_stateDump["unboundKinesins"].push_back(f);
+			/////
+			++iter;
+		}
+
+
+
+
+
+
+		std::ofstream o(_loggerparams.filepath + _loggerparams.name + "_final_state_dump"+ ".json");
+		o << std::setw(4) << _stateDump << std::endl;
+
+		///////
 		return "No errors encountered";
 	}
 
@@ -815,6 +834,7 @@ public:
 	}
 
 private:
+	json _stateDump;
 	// benchmark
 	//DatFileLogger _performanceLog;
 	//double _timebenchmark=0.0;
@@ -892,6 +912,7 @@ int main(int argc, char *argv[])
 	// Create and load simulation parameters and configuration, values are taken from json file
 	const auto simulationParameters = load_simulationparams(inputparamfile);
 	const auto configurations = load_configuration(inputparamfile);
+	//const auto initialSetup= load_setup(inputparamfile);
 
 	std::vector<std::unique_ptr<Task>> tasks;
 	for (const auto& configuration : configurations) {
