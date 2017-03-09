@@ -114,7 +114,9 @@ public:
 		_loggerparams(configuration.loggerParameters),
 		_kinesinStepsLog{ configuration.loggerParameters, "kinesinstepslog" },
 		_MAPStepsLog{ configuration.loggerParameters, "mapstepslog" },
-		_performanceLog{ _loggerparams, "performancelog" },
+		//benchmark
+		//_performanceLog{ _loggerparams, "performancelog" },
+		//benchmark
 		_kinesinPosLog{ configuration.loggerParameters, "kinposlog" },
 		_MAPPosLog{ configuration.loggerParameters, "mapposlog" }
 	{
@@ -354,7 +356,7 @@ public:
 		for (unsigned taskIteration = 0; taskIteration < nSteps; taskIteration++) {
 		
 			// benchmark
-			auto begin = std::chrono::high_resolution_clock::now();
+			//auto begin = std::chrono::high_resolution_clock::now();
 			// benchmark
 			
 			_currentstep = taskIteration;
@@ -759,19 +761,20 @@ public:
 			_state.BoundedMAPs = _boundMaps.size();
 			
 			// benchmark
-			auto end = std::chrono::high_resolution_clock::now();
+			//auto end = std::chrono::high_resolution_clock::now();
 
 
-			_timebenchmark = _timebenchmark + (double)std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin).count();
+			//_timebenchmark = _timebenchmark + (double)std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin).count();
 			// benchmark
 
 
 			if (taskIteration %_sP.saveFrequency == 0) {
 
 				//benchmark log
+				//_performanceLog.save(std::to_string(_timebenchmark / _sP.saveFrequency) + "\n");
+				//_timebenchmark = 0.0;
+				//benchmark log
 				
-					_performanceLog.save(std::to_string(_timebenchmark / _sP.saveFrequency) + "\n");
-				_timebenchmark = 0.0;
 				// basic coordinates log
 				writeStateTolog();
 				// extnded stepping log if selected
@@ -812,7 +815,10 @@ public:
 	}
 
 private:
-	double _timebenchmark=0.0;
+	// benchmark
+	//DatFileLogger _performanceLog;
+	//double _timebenchmark=0.0;
+	// benchmark
 	const SimulationParameters _sP;
 	const ModelParameters _mP;
 	const InitialConditions _initC;
@@ -849,7 +855,7 @@ private:
 	DatFileLogger _kinesinPosLog;
 	DatFileLogger _MAPPosLog;
 
-	DatFileLogger _performanceLog;
+	
 
 	std::string _positionstosave="";
 
