@@ -68,10 +68,11 @@ double mod(double a, double N)
 class Task
 {
 public:
-	Task(const SimulationParameters& simulationParameters, const Configuration& configuration):
+	Task(const SimulationParameters& simulationParameters, const Configuration& configuration, const InitialSetup& initSetup):
 		_sP( simulationParameters ),
 		_mP( configuration.modelParameters ),
 		_initC( configuration.initialConditions ),
+		_iSetup(initSetup),
 		_state( configuration.initialConditions.initialState ),
 		_loggerparams(configuration.loggerParameters),
 		_kinesinStepsLog{ configuration.loggerParameters, "kinesinstepslog" },
@@ -190,49 +191,62 @@ public:
 		
 		/////
 		/////
-
-		/// Initial binding
-		
-		if(_initC.oldInitialMount==1.0) 
+		if (_sP.useInitialSetup == 0)
 		{
-			for (double place = 0.0 + _initC.surfaceKINESINstartPoint; place < _initC.surfaceLength; place = place + _initC.KINESINdistance) {
-				for (double ind = _mP.numberKinesinsInOneSite; ind >= 1.0; ind--)
-				{
-					_unboundKinesins.emplace_back(place - (ind - 1.0)*(0.001 / _mP.numberKinesinsInOneSite), (int)ind);
-					kinesinCoordsLog->save(std::to_string((int)ind) +"	" +std::to_string( place - (ind - 1.0)*(0.001 / _mP.numberKinesinsInOneSite))  +"	");
-					
+			/// Initial binding
+
+			if (_initC.oldInitialMount == 1.0)
+			{
+				for (double place = 0.0 + _initC.surfaceKINESINstartPoint; place < _initC.surfaceLength; place = place + _initC.KINESINdistance) {
+					for (double ind = _mP.numberKinesinsInOneSite; ind >= 1.0; ind--)
+					{
+						_unboundKinesins.emplace_back(place - (ind - 1.0)*(0.001 / _mP.numberKinesinsInOneSite), (int)ind);
+						kinesinCoordsLog->save(std::to_string((int)ind) + "	" + std::to_string(place - (ind - 1.0)*(0.001 / _mP.numberKinesinsInOneSite)) + "	");
+
+					}
+				}
+				for (double place = 0.0 + _initC.surfaceMAPstartPoint; place < _initC.surfaceLength; place = place + _initC.MAPdistance) {
+					for (double ind = _mP.numberMAPsInOneSite; ind >= 1.0; ind--)
+					{
+						_unboundMaps.emplace_back(place - (ind - 1.0)*(0.001 / _mP.numberMAPsInOneSite), (int)ind);
+						MAPCoordsLog->save(std::to_string((int)ind) + "	" + std::to_string(place - (ind - 1.0)*(0.001 / _mP.numberMAPsInOneSite)) + "	");
+					}
 				}
 			}
-			for (double place = 0.0 + _initC.surfaceMAPstartPoint; place < _initC.surfaceLength; place = place + _initC.MAPdistance) {
-				for (double ind = _mP.numberMAPsInOneSite; ind >= 1.0; ind--)
+			else
+			{
+
+				double mountcoord;
+				//Kinesin binding
+
+				for (double ind = 0.0; ind < _initC.numberKinesins; ind++)
 				{
-					_unboundMaps.emplace_back(place - (ind - 1.0)*(0.001 / _mP.numberMAPsInOneSite), (int)ind);
-					MAPCoordsLog->save(std::to_string((int)ind) + "	" + std::to_string(place - (ind - 1.0)*(0.001 / _mP.numberMAPsInOneSite)) + "	");
+					mountcoord = get_uniform_rnd_forMounts(_initC.surfaceKINESINstartPoint, _initC.surfaceLength);
+					_unboundKinesins.emplace_back(mountcoord, (int)ind);
+					kinesinCoordsLog->save(std::to_string((int)ind) + "	" + std::to_string(mountcoord) + "	");
 				}
+				//MAPs binding
+				for (double ind = 0.0; ind < _initC.numberMAPs; ind++)
+				{
+					mountcoord = get_uniform_rnd_forMounts(_initC.surfaceMAPstartPoint, _initC.surfaceLength);
+					_unboundMaps.emplace_back(mountcoord, (int)ind);
+					MAPCoordsLog->save(std::to_string((int)ind) + "	" + std::to_string(mountcoord) + "	");
+				}
+
+
 			}
+
 		}
-		else
+		if (_sP.useInitialSetup == 1)
 		{
-			
-			double mountcoord;
-			//Kinesin binding
-			
-			for (double ind = 0.0; ind < _initC.numberKinesins; ind++)
-			{
-				mountcoord = get_uniform_rnd_forMounts(_initC.surfaceKINESINstartPoint, _initC.surfaceLength);
-				_unboundKinesins.emplace_back(mountcoord,(int)ind);
-				kinesinCoordsLog->save(std::to_string((int)ind) + "	" + std::to_string(mountcoord) + "	");
-			}
-			//MAPs binding
-			for (double ind = 0.0; ind < _initC.numberMAPs; ind++)
-			{
-				mountcoord = get_uniform_rnd_forMounts(_initC.surfaceMAPstartPoint, _initC.surfaceLength);
-				_unboundMaps.emplace_back(mountcoord,(int)ind);
-				MAPCoordsLog->save(std::to_string((int)ind) + "	" + std::to_string(mountcoord)  + "	");
-			}
-
-
+			_state.MTposition = _iSetup.MTposition;
+			_state.MTpositionStep = _iSetup.MTpositionStep;
+			 _unboundKinesins= _iSetup.InitialUnboundKINESINs;
+			 _boundKinesins = _iSetup.InitialBoundKINESINs;
+			 _unboundMaps = _iSetup.InitialUnboundMAPs;
+			 _boundMaps = _iSetup.InitialBoundMAPs;
 		}
+
 
 
 		delete MAPCoordsLog;
@@ -843,6 +857,7 @@ private:
 	const ModelParameters _mP;
 	const InitialConditions _initC;
 	const LoggerParameters _loggerparams;
+	const InitialSetup _iSetup;
 	SystemState _state;
 	std::vector<std::unique_ptr<BinaryFileLogger>> _loggers;
 	
@@ -912,11 +927,12 @@ int main(int argc, char *argv[])
 	// Create and load simulation parameters and configuration, values are taken from json file
 	const auto simulationParameters = load_simulationparams(inputparamfile);
 	const auto configurations = load_configuration(inputparamfile);
+	const auto initialSetup = load_setup(simulationParameters.initialSetupfile, simulationParameters.useInitialSetup);
 	//const auto initialSetup= load_setup(inputparamfile);
 
 	std::vector<std::unique_ptr<Task>> tasks;
 	for (const auto& configuration : configurations) {
-		auto task = std::make_unique<Task>(simulationParameters, configuration);
+		auto task = std::make_unique<Task>(simulationParameters, configuration, initialSetup);
 		tasks.push_back(std::move(task));
 	}
 	

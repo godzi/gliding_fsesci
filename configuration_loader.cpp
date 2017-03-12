@@ -19,8 +19,57 @@ SimulationParameters assign_simulation_parameters_from_json(SimulationParameters
 	if (!(jsonobjsimp["saveFrequency"].empty())) {
 		simp.saveFrequency = std::stoi(jsonobjsimp["saveFrequency"].get<std::string>());
 	}
+	if (!(jsonobjsimp["useInitialSetup"].empty())) {
+		simp.useInitialSetup = std::stoi(jsonobjsimp["useInitialSetup"].get<std::string>());
+	}
+	if (!(jsonobjsimp["initialSetupfile"].empty())) {
+		simp.initialSetupfile = jsonobjsimp["initialSetupfile"].get<std::string>();
+	}
+	//if (!(jsonobjsimp["dumpStatefile"].empty())) {
+	//	simp.dumpStatefile = jsonobjsimp["dumpStatefile"].get<std::string>();
+	//}
 	
 	return simp;
+}
+// helper to process json value into double
+double jsonValuetodouble(json obj)
+{
+	return stod(obj.get<std::string>());
+}
+
+InitialSetup assign_initial_setup_from_json(InitialSetup iSetup, json jsoniSetup)
+{
+	if (!(jsoniSetup["MTposition"].empty())) {
+		iSetup.MTposition = stod(jsoniSetup["MTposition"].get<std::string>());
+	}
+	if (!(jsoniSetup["MTpositionStep"].empty())) {
+		iSetup.MTpositionStep = stod(jsoniSetup["MTpositionStep"].get<std::string>());
+	}
+	if (!(jsoniSetup["boundKinesins"].empty())) {
+		for (json::iterator jsonit = jsoniSetup["boundKinesins"].begin(); jsonit != jsoniSetup["boundKinesins"].end(); ++jsonit) {
+			json jsonobj = *jsonit;
+			iSetup.InitialBoundKINESINs.emplace_back(jsonValuetodouble(jsonobj["mountCoordinate"]), jsonValuetodouble(jsonobj["MTsite"]), jsonValuetodouble(jsonobj["springLength"]), jsonValuetodouble(jsonobj["id"]));
+		}		
+	}
+	if (!(jsoniSetup["boundMaps"].empty())) {
+		for (json::iterator jsonit = jsoniSetup["boundMaps"].begin(); jsonit != jsoniSetup["boundMaps"].end(); ++jsonit) {
+			json jsonobj = *jsonit;
+			iSetup.InitialBoundMAPs.emplace_back(jsonValuetodouble(jsonobj["mountCoordinate"]), jsonValuetodouble(jsonobj["MTsite"]), jsonValuetodouble(jsonobj["springLength"]), jsonValuetodouble(jsonobj["id"]));
+		}
+	}
+	if (!(jsoniSetup["unboundKinesins"].empty())) {
+		for (json::iterator jsonit = jsoniSetup["unboundKinesins"].begin(); jsonit != jsoniSetup["unboundKinesins"].end(); ++jsonit) {
+			json jsonobj = *jsonit;
+			iSetup.InitialUnboundKINESINs.emplace_back(jsonValuetodouble(jsonobj["mountCoordinate"]), jsonValuetodouble(jsonobj["id"]));
+		}
+	}
+	if (!(jsoniSetup["unboundMaps"].empty())) {
+		for (json::iterator jsonit = jsoniSetup["unboundMaps"].begin(); jsonit != jsoniSetup["unboundMaps"].end(); ++jsonit) {
+			json jsonobj = *jsonit;
+			iSetup.InitialUnboundMAPs.emplace_back(jsonValuetodouble(jsonobj["mountCoordinate"]), jsonValuetodouble(jsonobj["id"]));
+		}
+	}
+	return iSetup;
 }
 
 // Assign configuration from json object
@@ -255,7 +304,18 @@ std::vector <Configuration> load_configuration(std::string paramInputFilename) {
 }
 
 //// Initial Setup
-//InitialSetup load_setup(std::string paramInputFilename) {
-
-
-//}
+InitialSetup load_setup(std::string setupFilename,int useInitialSetup) {
+	if (useInitialSetup == 1)
+	{
+		json fulljson = parse_json_string(readfile(setupFilename));
+		//json jsonsimp = fulljson["SimulationParameters"];
+		InitialSetup iSetup;
+		return assign_initial_setup_from_json(iSetup, fulljson);
+		//return iSetup;
+	}
+	else
+	{
+		InitialSetup iSetup;
+		return iSetup;
+	}
+}

@@ -21,3 +21,6 @@ Configuration assign_config_from_json(Configuration conf, json jsonobj);
 
 SimulationParameters load_simulationparams(std::string paramInputFilename);
 std::vector <Configuration> load_configuration(std::string paramInputFilename);
+InitialSetup  load_setup(std::string setupFilename, int useInitialSetup);
+InitialSetup assign_initial_setup_from_json(InitialSetup iSetup, json jsoniSetup);
+double jsonValuetodouble(json obj);

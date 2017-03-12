@@ -13,15 +13,20 @@ struct SimulationParameters
 	double totalTime;//
 	double timeStep;//
 	int saveFrequency;//save evry saveFrequency step
+	int useInitialSetup=0;
+	std::string initialSetupfile="";//json file if 
+	//std::string dumpStatefile = "";//json file if 
 };
 
 // Parameters to initialize interrupted simulation
 struct InitialSetup
 {
-	std::vector <boundKINESIN> InitialBoundKINESIN;
-	std::vector	<unboundKINESIN> InitialUnboundKINESIN;
-	std::vector	<boundMAP> InitialBoundMAP;
-	std::vector	<unboundMAP> InitialUnboundMAP;
+	double MTposition;
+	double MTpositionStep;
+	std::vector <boundKINESIN> InitialBoundKINESINs;
+	std::vector	<unboundKINESIN> InitialUnboundKINESINs;
+	std::vector	<boundMAP> InitialBoundMAPs;
+	std::vector	<unboundMAP> InitialUnboundMAPs;
 	
 };
 
