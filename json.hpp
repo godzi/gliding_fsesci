@@ -481,9 +481,8 @@ namespace nlohmann
 			static void detect(...);
 
 		public:
-			using C = typename BasicJsonType::template json_serializer<T, void>;
 			static constexpr bool value = std::is_integral<decltype(
-				detect(std::declval<C>()))>::value;
+				detect(std::declval<typename BasicJsonType::template json_serializer<T, void>>()))>::value;
 		};
 
 		// This trait checks if JSONSerializer<T>::from_json(json const&) exists
@@ -500,9 +499,8 @@ namespace nlohmann
 			static void detect(...);
 
 		public:
-			using B = typename BasicJsonType::template json_serializer<T, void>;
 			static constexpr bool value = std::is_integral<decltype(detect(
-				std::declval<B>()))>::value;
+				std::declval<typename BasicJsonType::template json_serializer<T, void>>()))>::value;
 		};
 
 		// This trait checks if BasicJsonType::json_serializer<T>::to_json exists
@@ -516,10 +514,8 @@ namespace nlohmann
 			static void detect(...);
 
 		public:
-			using A = typename BasicJsonType::template json_serializer<T, void >;
 			static constexpr bool value = std::is_integral<decltype(detect(
-
-				std::declval<A>()))>::value;
+				std::declval<typename BasicJsonType::template json_serializer<T, void>>()))>::value;
 		};
 
 
