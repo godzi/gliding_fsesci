@@ -824,7 +824,7 @@ public:
 	}
 	void terminate()
 	{
-		saveSteppingDatFile();
+		//saveSteppingDatFile();
 		std::ofstream MAPstepsfile{ _loggerparams.filepath + _loggerparams.name +"MAPsteps.binary" , std::ios::binary };
 		const std::vector<SingleMapSteplog> continiousStepsData{ begin(_MapBuffer), end(_MapBuffer) };
 		std::cout << "data vector size = " << continiousStepsData.size() << std::endl;
