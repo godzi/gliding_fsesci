@@ -10,6 +10,9 @@
 # include <omp.h>
 
 #include <vector>
+#include <deque>
+#include <numeric> //std::accumulate
+
 #include <algorithm>
 #include <math.h>
 #include <iomanip>
@@ -120,8 +123,15 @@ public:
 			_MAPStepsLog.save(std::to_string(time) + "	" + std::to_string(proteinMountCoordinate) + "	" + std::to_string(MTsiteNum) + "\n");
 		}*/
 
-		if (_initC.watchMAPs == 1.0) {
+		if ((_initC.watchMAPs == 1.0)&&(_initC.watchMAPsCircularBuffer==1.0)) {
 			
+			_MapBuffer.push_back((std::to_string(time) + "	" + std::to_string(proteinMountCoordinate) + "	" + std::to_string(MTsiteNum) + " " + std::to_string(_state.MTposition) + " " + std::to_string(mstate) + "\n"));
+			if (_MapBuffer.size() > _saveStepingMapBufferSize)
+			{
+				_MapBuffer.pop_front();
+			}
+
+			/*
 			_saveStepingMapCounter++;
 			_saveStepingMapBuffer= _saveStepingMapBuffer+ (std::to_string(time) + "	" + std::to_string(proteinMountCoordinate) + "	" + std::to_string(MTsiteNum) + " " + std::to_string(_state.MTposition) + " " + std::to_string(mstate) + "\n");
 			
@@ -140,7 +150,7 @@ public:
 				}
 				
 			}
-			
+			*/
 		}
 	}
 	void saveStepingKinesin(double time, double proteinMountCoordinate, int MTsiteNum, int kstate) {
@@ -718,8 +728,8 @@ public:
 					if ((_boundKinesins.size()==0)&&(_boundMaps.size()==0))
 					{
 						
-						// basic coordinates log
-						writeStateTolog();
+				
+						terminate();
 						return "Calculations aborted at simulation time " + std::to_string(_state.currentTime) + " due to no MAPs and Kinesins left on the MT and stopSimIfNoMAPsKinesins is on";
 
 					}
@@ -778,11 +788,23 @@ public:
 			
 			
 		}
+		terminate();
+		///////
+		return "No errors encountered";
+	}
+	void terminate()
+	{
+		_saveStepingMapBuffer = std::accumulate(begin(_MapBuffer), end(_MapBuffer), std::string{});
 
-		/////// Json Dump of final state
-		_stateDump["MTposition"]= (std::to_string(_state.MTposition));
+			///
+			
+			writeFinalSteppingLogBuffer();
+		// basic coordinates log
+			writeStateTolog();
+			/////// Json Dump of final state
+			_stateDump["MTposition"] = (std::to_string(_state.MTposition));
 		_stateDump["MTpositionStep"] = (std::to_string(_state.MTpositionStep));
-		
+
 		for (auto iter = _boundMaps.begin(); iter != _boundMaps.end(); )
 		{
 			json f;
@@ -829,11 +851,10 @@ public:
 
 
 
-		std::ofstream o(_loggerparams.filepath + _loggerparams.name + "_final_state_dump"+ ".json");
+		std::ofstream o(_loggerparams.filepath + _loggerparams.name + "_final_state_dump" + ".json");
 		o << std::setw(4) << _stateDump << std::endl;
 
-		///////
-		return "No errors encountered";
+			/// json dump end
 	}
 
 	void writeStateTolog() const {
@@ -906,6 +927,9 @@ private:
 public:
 	size_t _optimalGaussianBuffer = 100000;
 	size_t _optimalFlatBuffer = 500000;
+
+	std::deque <std::string> _MapBuffer;
+	
 };
 
 
@@ -994,7 +1018,7 @@ int main(int argc, char *argv[])
 			const auto flatBuffData = flatGenerator.getNumbersBuffer();
 
 			std::string taskvalidation= tasks[0]->advanceState(taskStepsNum, gaussBuffData, flatBuffData,&gaussGenerator,&flatGenerator);
-			tasks[0]->writeFinalSteppingLogBuffer();
+		
 			std::cout << taskvalidation << std::endl;
 			/*
 			#pragma omp parallel num_threads(nThreads) shared(buffData, tasks)
