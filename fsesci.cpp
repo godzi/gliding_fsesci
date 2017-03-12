@@ -64,9 +64,17 @@ double mod(double a, double N)
 {
 	return a - N*floor(a / N); //return in range [0, N)
 }
-
-
-
+#pragma pack(push,1)
+struct SingleMapSteplog
+{
+	double time;
+	double mountCoordinate;
+	int MTsiteNum;
+	double MTposition;
+	int mstate;
+};
+#pragma pack(pop)
+static_assert(sizeof(SingleMapSteplog) ==32, "wrong SingleMapSteplog packing");
 
 class Task
 {
@@ -124,8 +132,14 @@ public:
 		}*/
 
 		if ((_initC.watchMAPs == 1.0)&&(_initC.watchMAPsCircularBuffer==1.0)) {
-			
-			_MapBuffer.push_back((std::to_string(time) + "	" + std::to_string(proteinMountCoordinate) + "	" + std::to_string(MTsiteNum) + " " + std::to_string(_state.MTposition) + " " + std::to_string(mstate) + "\n"));
+			SingleMapSteplog thisStepLog;
+			thisStepLog.time= time;
+			thisStepLog.mountCoordinate= proteinMountCoordinate;
+			thisStepLog.MTsiteNum= MTsiteNum;
+			thisStepLog.MTposition=_state.MTposition;
+			thisStepLog.mstate= mstate;
+
+			_MapBuffer.push_back(thisStepLog);
 			if (_MapBuffer.size() > _saveStepingMapBufferSize)
 			{
 				_MapBuffer.pop_front();
@@ -792,13 +806,28 @@ public:
 		///////
 		return "No errors encountered";
 	}
+	void saveSteppingDatFile()
+	{
+		_saveStepingMapBuffer = std::accumulate(begin(_MapBuffer), end(_MapBuffer), std::string{}, [](std::string result, const SingleMapSteplog& element) {
+			return
+				std::move(result)
+				+ std::to_string(element.time) + "	"
+				+ std::to_string(element.mountCoordinate) + "	"
+				+ std::to_string(element.MTsiteNum) + " "
+				+ std::to_string(element.MTposition) + " "
+				+ std::to_string(element.mstate) + "\n";
+		});
+
+		///
+
+		writeFinalSteppingLogBuffer();
+	}
 	void terminate()
 	{
-		_saveStepingMapBuffer = std::accumulate(begin(_MapBuffer), end(_MapBuffer), std::string{});
+		saveSteppingDatFile();
 
-			///
-			
-			writeFinalSteppingLogBuffer();
+
+
 		// basic coordinates log
 			writeStateTolog();
 			/////// Json Dump of final state
@@ -928,7 +957,7 @@ public:
 	size_t _optimalGaussianBuffer = 100000;
 	size_t _optimalFlatBuffer = 500000;
 
-	std::deque <std::string> _MapBuffer;
+	std::deque <SingleMapSteplog> _MapBuffer;
 	
 };
 
