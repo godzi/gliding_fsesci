@@ -4,6 +4,20 @@
 #include <omp.h>
 #include <ctime>
 #include <thread>
+#include <chrono>
+#include <random>
+#include <iostream>
+
+ unsigned build_random_gauss_seed() {
+	unsigned seedMount = std::chrono::system_clock::now().time_since_epoch().count();
+	std::default_random_engine generatorMount(seedMount);
+	std::default_random_engine generator;
+	std::uniform_int_distribution<int> distribution(0,99999999);
+	unsigned result= static_cast<unsigned>(distribution(generatorMount));;
+//	std::cout << result << std::endl;
+	return result;
+
+}
 
 
 MklGaussianParallelGenerator::MklGaussianParallelGenerator(double mean, double stDeviation, std::size_t bufferSize, unsigned threadNum)
@@ -11,7 +25,10 @@ MklGaussianParallelGenerator::MklGaussianParallelGenerator(double mean, double s
 {
 	///////////////// If reproducibility from launch to launch is required seed is const, eslse seed must be random
 	//MKL_UINT seed = __rdtsc();
-	MKL_UINT seed = static_cast<unsigned>(std::time(0))*static_cast<unsigned>(std::hash<std::thread::id>()(std::this_thread::get_id()));
+	//MKL_UINT unsigned seed=std::chrono::system_clock::now().time_since_epoch().count();
+	//MKL_UINT seed = static_cast<unsigned>(std::time(0))*static_cast<unsigned>(std::hash<std::thread::id>()(std::this_thread::get_id()));
+	MKL_UINT seed = build_random_gauss_seed();
+	std::cout << "flat seed " <<  seed << std::endl;
 	/////////////////
 	for (unsigned i = 0; i < threadNum; i++) {
 		_streamWrappers.emplace_back(VSL_BRNG_MT2203 + i, seed);

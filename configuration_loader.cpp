@@ -25,6 +25,10 @@ SimulationParameters assign_simulation_parameters_from_json(SimulationParameters
 	if (!(jsonobjsimp["initialSetupfile"].empty())) {
 		simp.initialSetupfile = jsonobjsimp["initialSetupfile"].get<std::string>();
 	}
+	if (!(jsonobjsimp["stopSimIfNoMAPsKinesinsTmin"].empty())) {
+		simp.stopSimIfNoMAPsKinesinsTmin = stod(jsonobjsimp["stopSimIfNoMAPsKinesinsTmin"].get<std::string>());
+	}
+	
 	//if (!(jsonobjsimp["dumpStatefile"].empty())) {
 	//	simp.dumpStatefile = jsonobjsimp["dumpStatefile"].get<std::string>();
 	//}
@@ -184,7 +188,16 @@ Configuration assign_config_from_json(Configuration conf, json jsonobj) {
 	if (!(jsonobj["ModelParameters"]["kinesinDparam"].empty())) {
 		conf.modelParameters.kinesinDparam = stod(jsonobj["ModelParameters"]["kinesinDparam"].get<std::string>());
 	}
-
+	if (!(jsonobj["ModelParameters"]["kinesinOneDet"].empty())) {
+		conf.modelParameters.kinesinOneDet = stod(jsonobj["ModelParameters"]["kinesinOneDet"].get<std::string>());
+	}
+	if (!(jsonobj["ModelParameters"]["kinesinOneExpfsp"].empty())) {
+		conf.modelParameters.kinesinOneExpfsp = stod(jsonobj["ModelParameters"]["kinesinOneExpfsp"].get<std::string>());
+	}
+	if (!(jsonobj["ModelParameters"]["kinesinOneLinfsp"].empty())) {
+		conf.modelParameters.kinesinOneLinfsp = stod(jsonobj["ModelParameters"]["kinesinOneLinfsp"].get<std::string>());
+	}
+	
 	
 	//// Assign Initial Conditions from json
 	if (!(jsonobj["InitialConditions"]["MAPdistance"].empty())) {

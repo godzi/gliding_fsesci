@@ -4,7 +4,19 @@
 #include <omp.h>
 #include <ctime>
 #include <thread>
+#include <iostream>
+#include <random>
 
+unsigned build_random_flat_seed() {
+	unsigned seedMount = std::chrono::system_clock::now().time_since_epoch().count();
+	std::default_random_engine generatorMount(seedMount);
+	std::default_random_engine generator;
+	std::uniform_int_distribution<int> distribution(0, 99999999);
+	unsigned result = static_cast<unsigned>(distribution(generatorMount));;
+	//	std::cout << result << std::endl;
+	return result;
+
+}
 
 MklFlatParallelGenerator::MklFlatParallelGenerator() {}
 	
@@ -17,7 +29,9 @@ void MklFlatParallelGenerator::initialize(double leftBound, double rightBound, s
 	_threadNum = threadNum;
 	///////////////// If reproducibility from launch to launch is required seed is const, eslse seed must be random
 	//MKL_UINT seed = __rdtsc();
-	MKL_UINT seed = static_cast<unsigned>(std::time(0))*static_cast<unsigned>(std::hash<std::thread::id>()(std::this_thread::get_id()));
+	MKL_UINT seed = build_random_flat_seed();
+	//MKL_UINT seed = static_cast<unsigned>(std::time(0))*static_cast<unsigned>(std::hash<std::thread::id>()(std::this_thread::get_id()));
+	std::cout << "flat seed "<< seed << std::endl;
 	/////////////////
 	for (unsigned i = 0; i < threadNum; i++) {
 		_streamWrappers.emplace_back(VSL_BRNG_MT2203 + i, seed);

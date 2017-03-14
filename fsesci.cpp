@@ -59,6 +59,8 @@ double get_uniform_rnd_forMounts(double start, double end)
 
 }
 
+
+
 ///
 double mod(double a, double N)
 {
@@ -197,6 +199,9 @@ public:
 
 
 	size_t initializeState() {
+
+		
+
 		_state.currentTime = 0.0;
 		_state.MTpositionStep = 0.0;
 	//	_state.MTposition = 0.0;
@@ -516,11 +521,13 @@ public:
 								//use kinesin-1 params
 								if ((_currentSpringLength*_mP.KINESINstiffness) <= 0)
 								{
-									_KinesinunbindProbability = 0.79 + 1.56*(-_currentSpringLength*_mP.KINESINstiffness);
+									_KinesinunbindProbability = _mP.kinesinOneDet + _mP.kinesinOneLinfsp*(-_currentSpringLength*_mP.KINESINstiffness);
+									
 								}
 								else
 								{
-									_KinesinunbindProbability = 0.79*exp(_currentSpringLength*_mP.KINESINstiffness/6.1);
+									
+									_KinesinunbindProbability = _mP.kinesinOneDet*exp(_currentSpringLength*_mP.KINESINstiffness *_mP.kinesinOneExpfsp / _mP.kT);
 								}
 								
 							}
@@ -739,7 +746,7 @@ public:
 				// stop simulation if no MAPs and Kinesins bound, but only if parameter stopSimIfNoMAPsKinesins set to 1.0
 				if ((_initC.stopSimIfNoMAPsKinesins == 1.0) && (_everboundedMAPsKinesins > 0.0))
 				{
-					if ((_boundKinesins.size()==0)&&(_boundMaps.size()==0))
+					if ((_boundKinesins.size()==0)&&(_boundMaps.size()==0)&&(_state.currentTime>=_sP.stopSimIfNoMAPsKinesinsTmin))
 					{
 						
 				
@@ -769,7 +776,8 @@ public:
 
 
 			if (taskIteration %_sP.saveFrequency == 0) {
-
+				std::cout << takeFlatRandomNumber() << std::endl;
+				std::cout << takeNormalRandomNumber() << std::endl;
 				//benchmark log
 				//_performanceLog.save(std::to_string(_timebenchmark / _sP.saveFrequency) + "\n");
 				//_timebenchmark = 0.0;

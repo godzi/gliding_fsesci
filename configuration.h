@@ -16,6 +16,8 @@ struct SimulationParameters
 	int useInitialSetup=0;
 	std::string initialSetupfile="";//json file if 
 	//std::string dumpStatefile = "";//json file if 
+
+	double stopSimIfNoMAPsKinesinsTmin = 0.0;
 };
 
 // Parameters to initialize interrupted simulation
@@ -73,6 +75,9 @@ struct ModelParameters
 	double MAPKoff;
 	double MAPfsmParforKoff;
 	double kinesinDparam;
+	double kinesinOneDet;
+	double kinesinOneExpfsp;
+	double kinesinOneLinfsp;
 };
 
 struct SystemState
