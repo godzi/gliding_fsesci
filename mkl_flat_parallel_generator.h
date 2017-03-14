@@ -2,6 +2,8 @@
 #include "i_generator.h"
 #include "vsl_stream_wrapper.h"
 #include <vector>
+
+unsigned build_random_flat_seed();
 class MklFlatParallelGenerator :
 	public IGenerator
 {
