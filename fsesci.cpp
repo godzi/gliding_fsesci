@@ -490,7 +490,7 @@ public:
 							
 							
 
-							_MAPsunbindProbability = _mP.MAPKoff*exp(fabs(_currentSpringLength)*_mP.MAPfsmParforKoff/ (kBoltz*_mP.T));
+							_MAPsunbindProbability = _mP.MAPKoff*exp(fabs(iter->_springLength)*_mP.MAPfsmParforKoff/ (kBoltz*_mP.T));
 
 							if (takeFlatRandomNumber() > exp((-(_MAPsunbindProbability)*_sP.timeStep)))
 							{
@@ -519,28 +519,28 @@ public:
 							if (_initC.useKinesinOneparams==1.0)
 							{
 								//use kinesin-1 params
-								if ((_currentSpringLength*_mP.KINESINstiffness) <= 0)
+								if ((iter->_springLength*_mP.KINESINstiffness) <= 0)
 								{
-									_KinesinunbindProbability = _mP.kinesinOneDet + _mP.kinesinOneLinfsp*(-_currentSpringLength*_mP.KINESINstiffness);
+									_KinesinunbindProbability = _mP.kinesinOneDet + _mP.kinesinOneLinfsp*(-iter->_springLength*_mP.KINESINstiffness);
 									
 								}
 								else
 								{
 									
-									_KinesinunbindProbability = _mP.kinesinOneDet*exp(_currentSpringLength*_mP.KINESINstiffness *_mP.kinesinOneExpfsp / _mP.kT);
+									_KinesinunbindProbability = _mP.kinesinOneDet*exp(iter->_springLength*_mP.KINESINstiffness *_mP.kinesinOneExpfsp / _mP.kT);
 								}
 								
 							}
 							else
 							{
 								//use kinesin CENP-E params
-								_KinesinunbindProbability = 1 / (_mP.kinesinForceUnbindingA*exp(-fabs(_currentSpringLength*_mP.KINESINstiffness / _mP.kinesinForceUnbindingFd)));
+								_KinesinunbindProbability = 1 / (_mP.kinesinForceUnbindingA*exp(-fabs(iter->_springLength*_mP.KINESINstiffness / _mP.kinesinForceUnbindingFd)));
 							}
 
 							if (takeFlatRandomNumber() > exp((-(_KinesinunbindProbability)*_sP.timeStep)))
 							{
 								saveStepingKinesin(_state.currentTime, iter->_mountCoordinate,iter->_MTsite,-1);
-								std::cout << "this kinesin was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << _currentSpringLength*_mP.KINESINstiffness << "pN" << std::endl;
+								std::cout << "this kinesin was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << iter->_springLength*_mP.KINESINstiffness << "pN" << std::endl;
 								_unboundKinesins.emplace_back(iter->_mountCoordinate, iter->_id);
 								iter = _boundKinesins.erase(iter);
 								
@@ -776,8 +776,8 @@ public:
 
 
 			if (taskIteration %_sP.saveFrequency == 0) {
-				std::cout << takeFlatRandomNumber() << std::endl;
-				std::cout << takeNormalRandomNumber() << std::endl;
+			//	std::cout << takeFlatRandomNumber() << std::endl;
+			//	std::cout << takeNormalRandomNumber() << std::endl;
 				//benchmark log
 				//_performanceLog.save(std::to_string(_timebenchmark / _sP.saveFrequency) + "\n");
 				//_timebenchmark = 0.0;
@@ -941,7 +941,7 @@ private:
 	double _MAPsunbindProbability;
 	double _sitenum;
 	double _everboundedMAPsKinesins;
-	double _currentSpringLength;
+//	double _currentSpringLength;
 	
 	DatFileLogger _kinesinStepsLog; //log of stepping
 	DatFileLogger _MAPStepsLog;//log of stepping
