@@ -470,7 +470,7 @@ public:
 							
 							
 
-							_MAPsunbindProbability = _mP.MAPKoff*exp(fabs(iter->_springLength)*_mP.MAPfsmParforKoff/ (kBoltz*_mP.T));
+							_MAPsunbindProbability = _mP.MAPKoff*exp(fabs(iter->_springLength)*_mP.MAPstiffness*_mP.MAPfsmParforKoff/ (kBoltz*_mP.T));
 
 							if (takeFlatRandomNumber() > exp((-(_MAPsunbindProbability)*_sP.timeStep)))
 							{
