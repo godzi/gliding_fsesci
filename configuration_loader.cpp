@@ -28,10 +28,18 @@ SimulationParameters assign_simulation_parameters_from_json(SimulationParameters
 	if (!(jsonobjsimp["stopSimIfNoMAPsKinesinsTmin"].empty())) {
 		simp.stopSimIfNoMAPsKinesinsTmin = stod(jsonobjsimp["stopSimIfNoMAPsKinesinsTmin"].get<std::string>());
 	}
-	
-	//if (!(jsonobjsimp["dumpStatefile"].empty())) {
-	//	simp.dumpStatefile = jsonobjsimp["dumpStatefile"].get<std::string>();
-	//}
+	if (!(jsonobjsimp["extGaussianseed"].empty())) {
+		simp.extGaussianseed = static_cast<unsigned>(std::stoul(jsonobjsimp["extGaussianseed"].get<std::string>()));
+	}
+	if (!(jsonobjsimp["extUniformseed"].empty())) {
+		simp.extUniformseed = static_cast<unsigned>(std::stoul(jsonobjsimp["extUniformseed"].get<std::string>()));
+	}
+	if (!(jsonobjsimp["extMountseed"].empty())) {
+		simp.extMountseed = static_cast<unsigned>(std::stoul(jsonobjsimp["extMountseed"].get<std::string>()));
+	}
+	if (!(jsonobjsimp["TimeMinLog"].empty())) {
+		simp.TimeMinLog = stod(jsonobjsimp["TimeMinLog"].get<std::string>());
+	}
 	
 	return simp;
 }

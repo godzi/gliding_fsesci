@@ -18,6 +18,10 @@ struct SimulationParameters
 	//std::string dumpStatefile = "";//json file if 
 
 	double stopSimIfNoMAPsKinesinsTmin = 0.0;
+	unsigned extGaussianseed=0;
+	unsigned extUniformseed=0;
+	unsigned extMountseed = 0;
+	double TimeMinLog = 0.0;	
 };
 
 // Parameters to initialize interrupted simulation

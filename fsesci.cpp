@@ -48,11 +48,7 @@ const double kBoltz= 1.38064852e-5;// (*pN um *)
 /// ToDo try to use ofstream rawwrite
 
 
-//Random for surface Mounts of MAPs and kinesins
-unsigned seedMount = std::chrono::system_clock::now().time_since_epoch().count();
-std::default_random_engine generatorMount(seedMount);
-
-double get_uniform_rnd_forMounts(double start, double end)
+double get_uniform_rnd_forMounts(double start, double end, std::default_random_engine& generatorMount)
 {
 	std::uniform_real_distribution<double> distribution(start, end);
 	return distribution(generatorMount);
@@ -67,16 +63,16 @@ double mod(double a, double N)
 	return a - N*floor(a / N); //return in range [0, N)
 }
 #pragma pack(push,1)
-struct SingleMapSteplog
+struct SingleProteinSteplog
 {
 	double time;
 	double mountCoordinate;
 	int MTsiteNum;
 	double MTposition;
-	int mstate;
+	int proteinstate;
 };
 #pragma pack(pop)
-static_assert(sizeof(SingleMapSteplog) ==32, "wrong SingleMapSteplog packing");
+static_assert(sizeof(SingleProteinSteplog) ==32, "wrong SingleProteinSteplog packing");
 
 class Task
 {
@@ -129,78 +125,59 @@ public:
 
 	void saveStepingMap(double time, double proteinMountCoordinate,int MTsiteNum,int mstate ) {
 	//	std::cout << proteinMountCoordinate << " " << _initC.MonitorMAP << std::endl;
-		/*if ((fabs(proteinMountCoordinate - _initC.MonitorMAP)) <= _initC.MAPdistance / 2) {
-			_MAPStepsLog.save(std::to_string(time) + "	" + std::to_string(proteinMountCoordinate) + "	" + std::to_string(MTsiteNum) + "\n");
-		}*/
-
 		if ((_initC.watchMAPs == 1.0)&&(_initC.watchMAPsCircularBuffer==1.0)) {
-			SingleMapSteplog thisStepLog;
+			SingleProteinSteplog thisStepLog;
 			thisStepLog.time= time;
 			thisStepLog.mountCoordinate= proteinMountCoordinate;
 			thisStepLog.MTsiteNum= MTsiteNum;
 			thisStepLog.MTposition=_state.MTposition;
-			thisStepLog.mstate= mstate;
+			thisStepLog.proteinstate = mstate;
 
 			_MapBuffer.push_back(thisStepLog);
 			if (_MapBuffer.size() > _saveStepingMapBufferSize)
 			{
 				_MapBuffer.pop_front();
 			}
-
-			/*
-			_saveStepingMapCounter++;
-			_saveStepingMapBuffer= _saveStepingMapBuffer+ (std::to_string(time) + "	" + std::to_string(proteinMountCoordinate) + "	" + std::to_string(MTsiteNum) + " " + std::to_string(_state.MTposition) + " " + std::to_string(mstate) + "\n");
-			
-			if(_saveStepingMapCounter== _saveStepingMapBufferSize)
-			{
-				_saveStepingMapCounter = 0;
-				if((_initC.watchMAPsCircularBuffer!=1.0)||(_currentstep>= _totalsteps-10*_saveStepingMapBufferSize))
-				{
-					_MAPStepsLog.save(_saveStepingMapBuffer);
-				}
-				_saveStepingMapBuffer = "";
-				for (auto iter = _boundMaps.begin(); iter != _boundMaps.end(); )
-				{
-					saveStepingMap(_state.currentTime, iter->_mountCoordinate, iter->_MTsite, 0);
-					++iter;
-				}
-				
-			}
-			*/
+						
 		}
 	}
 	void saveStepingKinesin(double time, double proteinMountCoordinate, int MTsiteNum, int kstate) {
-		/*if ((fabs(proteinMountCoordinate - _initC.Monitorkinesin)) <= _initC.KINESINdistance / 2) {
-			_kinesinStepsLog.save(std::to_string(time) + "	" + std::to_string(proteinMountCoordinate) + "	" + std::to_string(MTsiteNum) + "\n");
-		}*/
 		
-		if (_initC.watchKinesins == 1.0) {
-			_saveStepingKinesinCounter++;
-			_saveStepingKinesinBuffer = _saveStepingKinesinBuffer + (std::to_string(time) + "	" + std::to_string(proteinMountCoordinate) + "	" + std::to_string(MTsiteNum) + " " + std::to_string(_state.MTposition) + " " + std::to_string(kstate) + "\n");
+			if ((_initC.watchKinesins == 1.0) && (_initC.watchKinesinsCircularBuffer == 1.0)) {
+				SingleProteinSteplog thisStepLog;
+				thisStepLog.time = time;
+				thisStepLog.mountCoordinate = proteinMountCoordinate;
+				thisStepLog.MTsiteNum = MTsiteNum;
+				thisStepLog.MTposition = _state.MTposition;
+				thisStepLog.proteinstate = kstate;
 
-			if (_saveStepingKinesinCounter == _saveStepingKinesinBufferSize)
-			{
-				_saveStepingKinesinCounter = 0;
-				if ((_initC.watchKinesinsCircularBuffer != 1.0) || (_currentstep >= _totalsteps - 4*_saveStepingKinesinBufferSize))
+				_KinesinBuffer.push_back(thisStepLog);
+				if (_KinesinBuffer.size() > _saveStepingMapBufferSize)
 				{
-					_kinesinStepsLog.save(_saveStepingKinesinBuffer);
+					_KinesinBuffer.pop_front();
 				}
-				_saveStepingKinesinBuffer = "";
-				for (auto iter = _boundKinesins.begin(); iter != _boundKinesins.end(); )
-				{
-					saveStepingKinesin(_state.currentTime, iter->_mountCoordinate, iter->_MTsite, 0);
-					++iter;
-				}
-			}
-		}
+
+			}		
 	}
 	
 	
 
 
-	size_t initializeState() {
 
-		
+
+	size_t initializeState() {
+		//Random for surface Mounts of MAPs and kinesins
+		if (_sP.extMountseed==0)
+		{
+			_seedMount = std::chrono::system_clock::now().time_since_epoch().count();
+		}
+		else
+		{
+			_seedMount = _sP.extMountseed;
+		}
+		std::cout << "mount seed " << _seedMount << std::endl;
+		std::default_random_engine generatorMount(_seedMount);
+		///
 
 		_state.currentTime = 0.0;
 		_state.MTpositionStep = 0.0;
@@ -250,14 +227,14 @@ public:
 
 				for (double ind = 0.0; ind < _initC.numberKinesins; ind++)
 				{
-					mountcoord = get_uniform_rnd_forMounts(_initC.surfaceKINESINstartPoint, _initC.surfaceLength);
+					mountcoord = get_uniform_rnd_forMounts(_initC.surfaceKINESINstartPoint, _initC.surfaceLength, generatorMount);
 					_unboundKinesins.emplace_back(mountcoord, (int)ind);
 					kinesinCoordsLog->save(std::to_string((int)ind) + "	" + std::to_string(mountcoord) + "	");
 				}
 				//MAPs binding
 				for (double ind = 0.0; ind < _initC.numberMAPs; ind++)
 				{
-					mountcoord = get_uniform_rnd_forMounts(_initC.surfaceMAPstartPoint, _initC.surfaceLength);
+					mountcoord = get_uniform_rnd_forMounts(_initC.surfaceMAPstartPoint, _initC.surfaceLength, generatorMount);
 					_unboundMaps.emplace_back(mountcoord, (int)ind);
 					MAPCoordsLog->save(std::to_string((int)ind) + "	" + std::to_string(mountcoord) + "	");
 				}
@@ -358,6 +335,9 @@ public:
 		double timeCompute = 0.0;
 		_state.currentTime = 0.0;
 		_everboundedMAPsKinesins = 0.0;
+		//dump initial state to json
+		dumpFullStatetoJson("_initial_state_dump");
+
 		for (unsigned taskIteration = 0; taskIteration < nSteps; taskIteration++) {
 		
 			// benchmark
@@ -556,7 +536,7 @@ public:
 					
 				/// Test for stepping for MT bound MAPs AND UPDATE SPRING EXTENSION LENGTHS
 						//// save position
-						if (taskIteration %_sP.saveFrequency == 0) {
+						if ((taskIteration %_sP.saveFrequency == 0) && (_state.currentTime >= _sP.TimeMinLog)) {
 						//	_positionstosave = std::to_string(_state.MTposition) +"	"+std::to_string(_state.currentTime)+"	";
 							_positionstosave = "";
 						}
@@ -568,7 +548,7 @@ public:
 					
 
 					///// saving position log  
-					if (taskIteration %_sP.saveFrequency == 0) {
+					if ((taskIteration %_sP.saveFrequency == 0)&&(_state.currentTime>=_sP.TimeMinLog)) {
 						_positionstosave = _positionstosave + std::to_string((iter->_id)) + "	"+std::to_string((iter->_MTsite)) + "	";
 					}
 
@@ -656,7 +636,7 @@ public:
 				}
 				////
 				///// saving position log  saveMapPosition
-				if (taskIteration %_sP.saveFrequency == 0) {
+				if ((taskIteration %_sP.saveFrequency == 0) && (_state.currentTime >= _sP.TimeMinLog)) {
 					_positionstosave = _positionstosave + "\n";
 					saveMapPosition(_positionstosave);
 					_positionstosave = "";
@@ -673,7 +653,7 @@ public:
 					
 
 					///// saving position log  
-					if (taskIteration %_sP.saveFrequency == 0) {
+					if ((taskIteration %_sP.saveFrequency == 0) && (_state.currentTime >= _sP.TimeMinLog)) {
 						_positionstosave = _positionstosave + std::to_string((iter->_id)) + "	" + std::to_string((iter->_MTsite)) + "	";
 					}
 
@@ -720,7 +700,7 @@ public:
 					}
 				}
 				/// save Kinesin positions log
-				if (taskIteration %_sP.saveFrequency == 0) {
+				if ((taskIteration %_sP.saveFrequency == 0) && (_state.currentTime >= _sP.TimeMinLog)) {
 					_positionstosave = _positionstosave + "\n";
 					saveKinesinPosition(_positionstosave);
 					_positionstosave = "";
@@ -775,7 +755,7 @@ public:
 			// benchmark
 
 
-			if (taskIteration %_sP.saveFrequency == 0) {
+			if ((taskIteration %_sP.saveFrequency == 0) && (_state.currentTime >= _sP.TimeMinLog)) {
 			//	std::cout << takeFlatRandomNumber() << std::endl;
 			//	std::cout << takeNormalRandomNumber() << std::endl;
 				//benchmark log
@@ -816,35 +796,63 @@ public:
 	}
 	void saveSteppingDatFile()
 	{
-		_saveStepingMapBuffer = std::accumulate(begin(_MapBuffer), end(_MapBuffer), std::string{}, [](std::string result, const SingleMapSteplog& element) {
+		_saveStepingMapBuffer = std::accumulate(begin(_MapBuffer), end(_MapBuffer), std::string{}, [](std::string result, const SingleProteinSteplog& element) {
 			return
 				std::move(result)
 				+ std::to_string(element.time) + "	"
 				+ std::to_string(element.mountCoordinate) + "	"
 				+ std::to_string(element.MTsiteNum) + " "
 				+ std::to_string(element.MTposition) + " "
-				+ std::to_string(element.mstate) + "\n";
+				+ std::to_string(element.proteinstate) + "\n";
 		});
-
 		///
-
+		_saveStepingKinesinBuffer = std::accumulate(begin(_KinesinBuffer), end(_KinesinBuffer), std::string{}, [](std::string result, const SingleProteinSteplog& element) {
+			return
+				std::move(result)
+				+ std::to_string(element.time) + "	"
+				+ std::to_string(element.mountCoordinate) + "	"
+				+ std::to_string(element.MTsiteNum) + " "
+				+ std::to_string(element.MTposition) + " "
+				+ std::to_string(element.proteinstate) + "\n";
+		});
+		///
 		writeFinalSteppingLogBuffer();
+	}
+	void saveSteppingBinaryFile()
+	{
+		// Binary MAPs stepping log
+		std::ofstream MAPstepsfile{ _loggerparams.filepath + _loggerparams.name + "MAPsteps.binary" , std::ios::binary };
+		const std::vector<SingleProteinSteplog> continiousMapStepsData{ begin(_MapBuffer), end(_MapBuffer) };
+		//std::cout << "data vector size = " << continiousStepsData.size() << std::endl;
+		MAPstepsfile.write(reinterpret_cast<const char*>(continiousMapStepsData.data()), continiousMapStepsData.size() * sizeof(SingleProteinSteplog));
+		MAPstepsfile.close();
+		// Binary Kinesins stepping log
+		std::ofstream Kinesinstepsfile{ _loggerparams.filepath + _loggerparams.name + "Kinesinsteps.binary" , std::ios::binary };
+		const std::vector<SingleProteinSteplog> continiousKinesinStepsData{ begin(_KinesinBuffer), end(_KinesinBuffer) };
+		//std::cout << "data vector size = " << continiousStepsData.size() << std::endl;
+		Kinesinstepsfile.write(reinterpret_cast<const char*>(continiousKinesinStepsData.data()), continiousKinesinStepsData.size() * sizeof(SingleProteinSteplog));
+		Kinesinstepsfile.close();
 	}
 	void terminate()
 	{
 		//saveSteppingDatFile();
-		std::ofstream MAPstepsfile{ _loggerparams.filepath + _loggerparams.name +"MAPsteps.binary" , std::ios::binary };
-		const std::vector<SingleMapSteplog> continiousStepsData{ begin(_MapBuffer), end(_MapBuffer) };
-		std::cout << "data vector size = " << continiousStepsData.size() << std::endl;
-		MAPstepsfile.write(reinterpret_cast<const char*>(continiousStepsData.data()), continiousStepsData.size() * sizeof(SingleMapSteplog));
-		MAPstepsfile.close();
+		saveSteppingBinaryFile();
 
 		// basic coordinates log
-			writeStateTolog();
-			/////// Json Dump of final state
-			_stateDump["MTposition"] = (std::to_string(_state.MTposition));
+		writeStateTolog();
+		//log final state to json
+		dumpFullStatetoJson("_final_state_dump");
+			
+	}
+	void dumpFullStatetoJson(std::string jsonstatefilename)
+	{
+		/////// Json Dump of final state
+		_stateDump["MTposition"] = (std::to_string(_state.MTposition));
 		_stateDump["MTpositionStep"] = (std::to_string(_state.MTpositionStep));
-
+		//_stateDump["boundMaps"].push_back(nullptr);
+		//_stateDump["unboundMaps"].push_back(nullptr);
+		//_stateDump["boundKinesins"].push_back(nullptr);
+		//_stateDump["unboundKinesins"].push_back(nullptr);
 		for (auto iter = _boundMaps.begin(); iter != _boundMaps.end(); )
 		{
 			json f;
@@ -885,16 +893,11 @@ public:
 			/////
 			++iter;
 		}
-
-
-
-
-
-
-		std::ofstream o(_loggerparams.filepath + _loggerparams.name + "_final_state_dump" + ".json");
+		std::ofstream o(_loggerparams.filepath + _loggerparams.name + jsonstatefilename + ".json");
 		o << std::setw(4) << _stateDump << std::endl;
-
-			/// json dump end
+		_stateDump.clear();
+		o.close();
+		/// json dump end
 	}
 
 	void writeStateTolog() const {
@@ -909,6 +912,7 @@ public:
 	}
 
 private:
+	unsigned _seedMount;
 	json _stateDump;
 	// benchmark
 	//DatFileLogger _performanceLog;
@@ -968,8 +972,8 @@ public:
 	size_t _optimalGaussianBuffer = 100000;
 	size_t _optimalFlatBuffer = 500000;
 
-	std::deque <SingleMapSteplog> _MapBuffer;
-	
+	std::deque <SingleProteinSteplog> _MapBuffer;
+	std::deque <SingleProteinSteplog> _KinesinBuffer;
 };
 
 
@@ -1042,10 +1046,10 @@ int main(int argc, char *argv[])
 	//}
 	//int taskStepsNum = (int)floor(optimalFlatBufferSize/ flatbuffersizeperStep);
 	int taskStepsNum = totalSteps / macrostepsNum;
-	
-	MklGaussianParallelGenerator gaussGenerator(0.0, 1.0, tasks[0]->_optimalGaussianBuffer, 1);
+
+	MklGaussianParallelGenerator gaussGenerator(0.0, 1.0, tasks[0]->_optimalGaussianBuffer, 1, simulationParameters.extGaussianseed);
 	MklFlatParallelGenerator flatGenerator;
-	flatGenerator.initialize(0.0, 1.0, tasks[0]->_optimalFlatBuffer, 4);
+	flatGenerator.initialize(0.0, 1.0, tasks[0]->_optimalFlatBuffer, 4, simulationParameters.extUniformseed);
 	//std::cout << macrostepsNum << std::endl;
 	//for (int savedstep = 0; savedstep < (100'000); savedstep++) {
 

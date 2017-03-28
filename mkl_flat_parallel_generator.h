@@ -9,7 +9,7 @@ class MklFlatParallelGenerator :
 {
 public:
 	MklFlatParallelGenerator();
-	void initialize(double leftBound, double rightBound, std::size_t bufferSize, unsigned threadNum);
+	void initialize(double leftBound, double rightBound, std::size_t bufferSize, unsigned threadNum, unsigned extseed);
 	virtual void generateNumbers() override;
 	virtual const double* getNumbersBuffer() const override;
 	virtual std::size_t getNumbersBufferSize() const override;
@@ -21,5 +21,6 @@ private:
 	std::vector <VSLStreamWrapper> _streamWrappers;
 	std::vector<double> _buffer;
 	std::size_t _nPerThread;
+	unsigned _extseed;
 };
 

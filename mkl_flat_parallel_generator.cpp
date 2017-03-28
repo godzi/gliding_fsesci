@@ -21,15 +21,23 @@ unsigned build_random_flat_seed() {
 MklFlatParallelGenerator::MklFlatParallelGenerator() {}
 	
 
-void MklFlatParallelGenerator::initialize(double leftBound, double rightBound, std::size_t bufferSize, unsigned threadNum) 
+void MklFlatParallelGenerator::initialize(double leftBound, double rightBound, std::size_t bufferSize, unsigned threadNum, unsigned extseed)
 {
 	_leftBound = leftBound;
 	_rightBound = rightBound;
 	_bufferSize = bufferSize;
 	_threadNum = threadNum;
+	_extseed = extseed;
 	///////////////// If reproducibility from launch to launch is required seed is const, eslse seed must be random
 	//MKL_UINT seed = __rdtsc();
-	MKL_UINT seed = build_random_flat_seed();
+	MKL_UINT seed;
+	if (extseed == 0) {
+		seed = build_random_flat_seed();
+	}
+	else
+	{
+		seed = extseed;
+	}
 	//MKL_UINT seed = static_cast<unsigned>(std::time(0))*static_cast<unsigned>(std::hash<std::thread::id>()(std::this_thread::get_id()));
 	std::cout << "flat seed "<< seed << std::endl;
 	/////////////////
