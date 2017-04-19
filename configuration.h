@@ -82,6 +82,7 @@ struct ModelParameters
 	double kinesinOneDet;
 	double kinesinOneExpfsp;
 	double kinesinOneLinfsp;
+	double constantForceonMT=0.0;
 };
 
 struct SystemState

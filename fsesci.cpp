@@ -740,7 +740,7 @@ public:
 
 				//////////////////
 
-			_SummForces = -(_mP.KINESINforcesOn* _state.SummKINESINForces+ _mP.MAPforcesOn* _state.SummMAPForces);
+			_SummForces = -(_mP.KINESINforcesOn* _state.SummKINESINForces+ _mP.MAPforcesOn* _state.SummMAPForces + _mP.constantForceonMT);
 			
 			////
 			 _state.MTpositionStep= (_sP.timeStep / _mP.gammaMT)*_SummForces +	_mP.thermalNoiseOn*sqrt(2.0 * _mP.kT*_sP.timeStep / _mP.gammaMT) *	takeNormalRandomNumber();

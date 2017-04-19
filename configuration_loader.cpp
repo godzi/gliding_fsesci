@@ -205,7 +205,9 @@ Configuration assign_config_from_json(Configuration conf, json jsonobj) {
 	if (!(jsonobj["ModelParameters"]["kinesinOneLinfsp"].empty())) {
 		conf.modelParameters.kinesinOneLinfsp = stod(jsonobj["ModelParameters"]["kinesinOneLinfsp"].get<std::string>());
 	}
-	
+	if (!(jsonobj["ModelParameters"]["constantForceonMT"].empty())) {
+		conf.modelParameters.constantForceonMT = stod(jsonobj["ModelParameters"]["constantForceonMT"].get<std::string>());
+	}
 	
 	//// Assign Initial Conditions from json
 	if (!(jsonobj["InitialConditions"]["MAPdistance"].empty())) {
