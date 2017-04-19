@@ -103,7 +103,9 @@ public:
 
 	}
 	int countTotalSteps() {
+		std::cout << "total steps" << (int)ceil(_sP.totalTime / _sP.timeStep) << std::endl;
 		return (int)ceil(_sP.totalTime / _sP.timeStep);
+
 	}
 
 
@@ -969,8 +971,8 @@ private:
 	unsigned _currentstep = 0;
 	unsigned _totalsteps = 0;
 public:
-	size_t _optimalGaussianBuffer = 100000;
-	size_t _optimalFlatBuffer = 500000;
+	size_t _optimalGaussianBuffer = 100000;//50000;
+	size_t _optimalFlatBuffer = 500000;//200000;
 
 	std::deque <SingleProteinSteplog> _MapBuffer;
 	std::deque <SingleProteinSteplog> _KinesinBuffer;
