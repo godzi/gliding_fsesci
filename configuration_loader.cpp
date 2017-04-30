@@ -209,6 +209,40 @@ Configuration assign_config_from_json(Configuration conf, json jsonobj) {
 		conf.modelParameters.constantForceonMT = stod(jsonobj["ModelParameters"]["constantForceonMT"].get<std::string>());
 	}
 	
+	if (!(jsonobj["ModelParameters"]["MTgrowthrate"].empty())) {
+		conf.modelParameters.MTgrowthrate = stod(jsonobj["ModelParameters"]["MTgrowthrate"].get<std::string>());
+	}
+	if (!(jsonobj["ModelParameters"]["MTshrinkrate"].empty())) {
+		conf.modelParameters.MTshrinkrate = stod(jsonobj["ModelParameters"]["MTshrinkrate"].get<std::string>());
+	}
+	if (!(jsonobj["ModelParameters"]["dynamicMT"].empty())) {
+		conf.modelParameters.dynamicMT = stod(jsonobj["ModelParameters"]["dynamicMT"].get<std::string>());
+	}
+	
+	if (!(jsonobj["ModelParameters"]["useMAPunbindingThreshold"].empty())) {
+		conf.modelParameters.useMAPunbindingThreshold = stod(jsonobj["ModelParameters"]["useMAPunbindingThreshold"].get<std::string>());
+	}
+	if (!(jsonobj["ModelParameters"]["MAPThresholdRight"].empty())) {
+		conf.modelParameters.MAPThresholdRight = stod(jsonobj["ModelParameters"]["MAPThresholdRight"].get<std::string>());
+	}
+	if (!(jsonobj["ModelParameters"]["MAPThresholdLeft"].empty())) {
+		conf.modelParameters.MAPThresholdLeft = stod(jsonobj["ModelParameters"]["MAPThresholdLeft"].get<std::string>());
+	}
+	if (!(jsonobj["ModelParameters"]["MAPunbindingThresholdisExponential"].empty())) {
+		conf.modelParameters.MAPunbindingThresholdisExponential = stod(jsonobj["ModelParameters"]["MAPunbindingThresholdisExponential"].get<std::string>());
+	}
+	if (!(jsonobj["ModelParameters"]["MAPAssymDiffusion"].empty())) {
+		conf.modelParameters.MAPAssymDiffusion = stod(jsonobj["ModelParameters"]["MAPAssymDiffusion"].get<std::string>());
+	}
+	
+	if (!(jsonobj["ModelParameters"]["MAPDiffSmRight"].empty())) {
+		conf.modelParameters.MAPDiffSmRight = stod(jsonobj["ModelParameters"]["MAPDiffSmRight"].get<std::string>());
+	}
+	if (!(jsonobj["ModelParameters"]["MAPDiffSmLeft"].empty())) {
+		conf.modelParameters.MAPDiffSmLeft = stod(jsonobj["ModelParameters"]["MAPDiffSmLeft"].get<std::string>());
+	}
+	
+	
 	//// Assign Initial Conditions from json
 	if (!(jsonobj["InitialConditions"]["MAPdistance"].empty())) {
 		conf.initialConditions.MAPdistance = stod(jsonobj["InitialConditions"]["MAPdistance"].get<std::string>());

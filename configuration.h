@@ -46,6 +46,9 @@ struct LoggerParameters
 };
 struct ModelParameters
 {
+	double MTgrowthrate;
+	double MTshrinkrate;
+	double dynamicMT;
 	double T ;
 	double kT;
 	double thermalNoiseOn;
@@ -83,11 +86,19 @@ struct ModelParameters
 	double kinesinOneExpfsp;
 	double kinesinOneLinfsp;
 	double constantForceonMT=0.0;
+	double useMAPunbindingThreshold=0.0;
+	double MAPThresholdRight;
+	double MAPThresholdLeft;
+	double MAPunbindingThresholdisExponential;
+	double MAPAssymDiffusion =0.0;
+	double MAPDiffSmRight;
+		double MAPDiffSmLeft;
 };
 
 struct SystemState
 {
 	double MTposition;
+	double MTcurLength;
 	double SummKINESINForces;
 	double SummMAPForces;
 	double currentTime;
@@ -99,6 +110,7 @@ struct SystemState
 	template <typename Callback>
 	static void iterateFields(Callback&& callback) {
 		callback(&SystemState::MTposition, "MTposition");
+		callback(&SystemState::MTcurLength, "MTcurLength");
 		callback(&SystemState::SummKINESINForces, "SummKINESINForces");
 		callback(&SystemState::SummMAPForces, "SummMAPForces");
 		callback(&SystemState::currentTime, "currentTime");

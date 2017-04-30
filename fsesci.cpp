@@ -183,6 +183,7 @@ public:
 
 		_state.currentTime = 0.0;
 		_state.MTpositionStep = 0.0;
+		_state.MTcurLength = _initC.MTlength;
 	//	_state.MTposition = 0.0;
 		_NumberofMTsites = (int)floor(_initC.MTlength / _mP.deltaPeriod);
 		
@@ -366,6 +367,20 @@ public:
 			//std::cout << "taskIteration = " << taskIteration << ", FlatRandomCounter = " << counterFlatRandomNumber << ", FlatRandom = " << rndFlatNumbers[counterFlatRandomNumber] << ", BoundMAPs = " << _boundMaps.size() <<std::endl;
 			//takeFlatRandomNumber();
 
+			/// Test for MT growth and shrinkage
+			if (_mP.dynamicMT == 1.0)
+			{
+				if ((takeFlatRandomNumber() > exp(-(_mP.MTgrowthrate)*_sP.timeStep)))
+				{
+					_state.MTcurLength = _state.MTcurLength + 0.004;
+					_NumberofMTsites = _NumberofMTsites + 1;
+				}
+				if ((takeFlatRandomNumber() > exp(-(_mP.MTshrinkrate)*_sP.timeStep)) && (_NumberofMTsites > 2))
+				{
+					_state.MTcurLength = _state.MTcurLength - 0.004;
+					_NumberofMTsites = _NumberofMTsites - 1;
+				}
+			}
 			
 
 			/// test for binding
@@ -468,21 +483,101 @@ public:
 					// Test for MAP unbinding
 					if (_initC.MAPUnbinding == 1.0)
 					{
+						
+						if (_mP.useMAPunbindingThreshold==0.0)
+						{
+
+
+							for (auto iter = _boundMaps.begin(); iter != _boundMaps.end(); ) {
+
+
+
+								_MAPsunbindProbability = _mP.MAPKoff*exp(fabs(iter->_springLength)*_mP.MAPstiffness*_mP.MAPfsmParforKoff / (kBoltz*_mP.T));
+
+								if (takeFlatRandomNumber() > exp((-(_MAPsunbindProbability)*_sP.timeStep)))
+								{
+									saveStepingMap(_state.currentTime, iter->_mountCoordinate, iter->_MTsite, -1);
+									std::cout << "this MAP was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << iter->_springLength*_mP.MAPstiffness << "pN" << std::endl;
+									_unboundMaps.emplace_back(iter->_mountCoordinate, iter->_id);
+									iter = _boundMaps.erase(iter);
+
+
+
+								}
+								else
+								{
+									++iter;
+								}
+							}
+						}
+						if (_mP.useMAPunbindingThreshold == 1.0)
+						{
+							if (_mP.MAPunbindingThresholdisExponential == 0.0)
+							{
+
+								for (auto iter = _boundMaps.begin(); iter != _boundMaps.end(); ) {
+
+
+									if (((iter->_springLength) >= _mP.MAPThresholdRight) || ((iter->_springLength) <= -_mP.MAPThresholdLeft))
+									{
+										saveStepingMap(_state.currentTime, iter->_mountCoordinate, iter->_MTsite, -1);
+										std::cout << "this MAP was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << iter->_springLength*_mP.MAPstiffness << "pN" << std::endl;
+										_unboundMaps.emplace_back(iter->_mountCoordinate, iter->_id);
+										iter = _boundMaps.erase(iter);
+
+
+
+									}
+									else
+									{
+										++iter;
+									}
+								}
+							}
+							if (_mP.MAPunbindingThresholdisExponential == 1.0)
+							{
+								for (auto iter = _boundMaps.begin(); iter != _boundMaps.end(); ) {
+
+
+									if (iter->_springLength >= 0.0)
+									{
+										_MAPsunbindProbability = _mP.MAPKoff*exp(fabs(iter->_springLength)*_mP.MAPstiffness*_mP.MAPThresholdRight / (kBoltz*_mP.T));
+									}
+									if (iter->_springLength <= 0.0)
+									{
+										_MAPsunbindProbability = _mP.MAPKoff*exp(fabs(iter->_springLength)*_mP.MAPstiffness*_mP.MAPThresholdLeft / (kBoltz*_mP.T));
+									}
+
+									if (takeFlatRandomNumber() > exp((-(_MAPsunbindProbability)*_sP.timeStep)))
+									{
+										saveStepingMap(_state.currentTime, iter->_mountCoordinate, iter->_MTsite, -1);
+										std::cout << "this MAP was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << iter->_springLength*_mP.MAPstiffness << "pN" << std::endl;
+										_unboundMaps.emplace_back(iter->_mountCoordinate, iter->_id);
+										iter = _boundMaps.erase(iter);
+
+
+
+									}
+									else
+									{
+										++iter;
+									}
+								}
+							}
+						}
+					}
+
+
+///////////////////// Map unbinding from dynamic MT
+					if (_mP.dynamicMT == 1.0)
+					{
 						for (auto iter = _boundMaps.begin(); iter != _boundMaps.end(); ) {
-							
-							
-
-							_MAPsunbindProbability = _mP.MAPKoff*exp(fabs(iter->_springLength)*_mP.MAPstiffness*_mP.MAPfsmParforKoff/ (kBoltz*_mP.T));
-
-							if (takeFlatRandomNumber() > exp((-(_MAPsunbindProbability)*_sP.timeStep)))
+							if ((iter->_MTsite) > _NumberofMTsites) 
 							{
 								saveStepingMap(_state.currentTime, iter->_mountCoordinate, iter->_MTsite,-1);
-								std::cout << "this MAP was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << iter->_springLength*_mP.MAPstiffness << "pN" << std::endl;
+								std::cout << "this MAP was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << iter->_springLength*_mP.MAPstiffness << "pN. From srinked MT" << std::endl;
 								_unboundMaps.emplace_back(iter->_mountCoordinate,iter->_id);
 								iter = _boundMaps.erase(iter);
-
-
-
 							}
 							else
 							{
@@ -536,6 +631,26 @@ public:
 						}
 					}
 					
+////////////////////// Kinesin unbinding from dynamic MT
+					if (_mP.dynamicMT == 1.0)
+					{
+						for (auto iter = _boundKinesins.begin(); iter != _boundKinesins.end(); ) {
+							if ((iter->_MTsite) > _NumberofMTsites)
+							{
+								saveStepingKinesin(_state.currentTime, iter->_mountCoordinate, iter->_MTsite, -1);
+								std::cout << "this kinesin was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << iter->_springLength*_mP.KINESINstiffness << "pN. From srinked MT" << std::endl;
+								_unboundKinesins.emplace_back(iter->_mountCoordinate, iter->_id);
+								iter = _boundKinesins.erase(iter);
+							}
+							else
+							{
+								++iter;
+							}
+						}
+					}
+
+
+
 				/// Test for stepping for MT bound MAPs AND UPDATE SPRING EXTENSION LENGTHS
 						//// save position
 						if ((taskIteration %_sP.saveFrequency == 0) && (_state.currentTime >= _sP.TimeMinLog)) {
@@ -561,6 +676,20 @@ public:
 					///
 					_kprob = _mP.MAPsDiffusion / (_mP.deltaPeriod*_mP.deltaPeriod);
 					_kpow = (-springForce(_mP.MAPstiffness, iter->_springLength))*_mP.MAPfsmPar / ( kBoltz*_mP.T);
+
+					if (_mP.MAPAssymDiffusion ==1.0)
+					{
+						if (iter->_springLength <= 0.0)
+						{
+							
+							_kpow = (-springForce(_mP.MAPstiffness, iter->_springLength))*_mP.MAPDiffSmRight / (kBoltz*_mP.T);
+						}
+						if (iter->_springLength >= 0.0)
+						{
+							_kpow = (-springForce(_mP.MAPstiffness, iter->_springLength))*_mP.MAPDiffSmLeft / (kBoltz*_mP.T);
+						}
+					}
+
 					_kPlus = _kprob*exp(_kpow);
 					_kMinus =_kprob*exp(-_kpow);
 					
