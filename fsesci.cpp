@@ -501,12 +501,12 @@ public:
 
 
 
-								_MAPsunbindProbability = _mP.MAPKoff*exp(fabs(iter->_springLength)*_mP.MAPstiffness*_mP.MAPfsmParforKoff / (kBoltz*_mP.T));
+								_MAPsunbindProbability = _mP.MAPKoff*exp(fabs(springForce(_mP.MAPstiffness, (iter->_springLength)))*_mP.MAPfsmParforKoff / (kBoltz*_mP.T));
 
 								if (takeFlatRandomNumber() > exp((-(_MAPsunbindProbability)*_sP.timeStep)))
 								{
 									saveStepingMap(_state.currentTime, iter->_mountCoordinate, iter->_MTsite, -1);
-									std::cout << "this MAP was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << iter->_springLength*_mP.MAPstiffness << "pN" << std::endl;
+									std::cout << "this MAP was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << springForce(_mP.MAPstiffness, iter->_springLength) << "pN" << std::endl;
 									_unboundMaps.emplace_back(iter->_mountCoordinate, iter->_id);
 									iter = _boundMaps.erase(iter);
 
@@ -530,7 +530,7 @@ public:
 									if (((iter->_springLength) >= _mP.MAPThresholdRight) || ((iter->_springLength) <= -_mP.MAPThresholdLeft))
 									{
 										saveStepingMap(_state.currentTime, iter->_mountCoordinate, iter->_MTsite, -1);
-										std::cout << "this MAP was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << iter->_springLength*_mP.MAPstiffness << "pN" << std::endl;
+										std::cout << "this MAP was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << springForce(_mP.MAPstiffness, iter->_springLength) << "pN" << std::endl;
 										_unboundMaps.emplace_back(iter->_mountCoordinate, iter->_id);
 										iter = _boundMaps.erase(iter);
 
@@ -550,17 +550,17 @@ public:
 
 									if (iter->_springLength <= 0.0)
 									{
-										_MAPsunbindProbability = _mP.MAPKoff*exp(fabs(iter->_springLength)*_mP.MAPstiffness*_mP.MAPThresholdRight / (kBoltz*_mP.T));
+										_MAPsunbindProbability = _mP.MAPKoff*exp(fabs(springForce(_mP.MAPstiffness, iter->_springLength))*_mP.MAPThresholdRight / (kBoltz*_mP.T));
 									}
 									else
 									{
-										_MAPsunbindProbability = _mP.MAPKoff*exp(fabs(iter->_springLength)*_mP.MAPstiffness*_mP.MAPThresholdLeft / (kBoltz*_mP.T));
+										_MAPsunbindProbability = _mP.MAPKoff*exp(fabs(springForce(_mP.MAPstiffness, iter->_springLength))*_mP.MAPThresholdLeft / (kBoltz*_mP.T));
 									}
 
 									if (takeFlatRandomNumber() > exp((-(_MAPsunbindProbability)*_sP.timeStep)))
 									{
 										saveStepingMap(_state.currentTime, iter->_mountCoordinate, iter->_MTsite, -1);
-										std::cout << "this MAP was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << iter->_springLength*_mP.MAPstiffness << "pN" << std::endl;
+										std::cout << "this MAP was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << springForce(_mP.MAPstiffness, iter->_springLength) << "pN" << std::endl;
 										_unboundMaps.emplace_back(iter->_mountCoordinate, iter->_id);
 										iter = _boundMaps.erase(iter);
 
@@ -584,7 +584,7 @@ public:
 							if ((iter->_MTsite) > _NumberofMTsites) 
 							{
 								saveStepingMap(_state.currentTime, iter->_mountCoordinate, iter->_MTsite,-1);
-								std::cout << "this MAP was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << iter->_springLength*_mP.MAPstiffness << "pN. From srinked MT" << std::endl;
+								std::cout << "this MAP was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << springForce(_mP.MAPstiffness, iter->_springLength) << "pN. From srinked MT" << std::endl;
 								_unboundMaps.emplace_back(iter->_mountCoordinate,iter->_id);
 								iter = _boundMaps.erase(iter);
 							}
@@ -608,26 +608,26 @@ public:
 								if ((iter->_springLength) <= 0)
 								{
 								//assisting force
-									_KinesinunbindProbability =( _mP.kinesinOneDet + _mP.kinesinOneLinfsp*(-iter->_springLength*_mP.KINESINstiffness));
+									_KinesinunbindProbability =( _mP.kinesinOneDet + _mP.kinesinOneLinfsp*(-springForce(_mP.KINESINstiffness, iter->_springLength)));
 									
 								}
 								else
 								{
 									//hindering force
-									_KinesinunbindProbability =  _mP.kinesinOneDet*exp(iter->_springLength*_mP.KINESINstiffness *_mP.kinesinOneExpfsp / _mP.kT);
+									_KinesinunbindProbability =  _mP.kinesinOneDet*exp(springForce(_mP.KINESINstiffness, iter->_springLength) *_mP.kinesinOneExpfsp / _mP.kT);
 								}
 								
 							}
 							else
 							{
 								//use kinesin CENP-E params
-								_KinesinunbindProbability = 1 / (_mP.kinesinForceUnbindingA*exp(-fabs(iter->_springLength*_mP.KINESINstiffness / _mP.kinesinForceUnbindingFd)));
+								_KinesinunbindProbability = 1 / (_mP.kinesinForceUnbindingA*exp(-fabs(springForce(_mP.KINESINstiffness, iter->_springLength) / _mP.kinesinForceUnbindingFd)));
 							}
 
 							if (takeFlatRandomNumber() > exp((-(_KinesinunbindProbability)*_sP.timeStep)))
 							{
 								saveStepingKinesin(_state.currentTime, iter->_mountCoordinate,iter->_MTsite,-1);
-								std::cout << "this kinesin was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << iter->_springLength*_mP.KINESINstiffness << "pN" << std::endl;
+								std::cout << "this kinesin was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << springForce(_mP.KINESINstiffness, iter->_springLength) << "pN" << std::endl;
 								_unboundKinesins.emplace_back(iter->_mountCoordinate, iter->_id);
 								iter = _boundKinesins.erase(iter);
 								
@@ -648,7 +648,7 @@ public:
 							if ((iter->_MTsite) > _NumberofMTsites)
 							{
 								saveStepingKinesin(_state.currentTime, iter->_mountCoordinate, iter->_MTsite, -1);
-								std::cout << "this kinesin was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << iter->_springLength*_mP.KINESINstiffness << "pN. From srinked MT" << std::endl;
+								std::cout << "this kinesin was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << springForce(_mP.KINESINstiffness, iter->_springLength) << "pN. From srinked MT" << std::endl;
 								_unboundKinesins.emplace_back(iter->_mountCoordinate, iter->_id);
 								iter = _boundKinesins.erase(iter);
 							}
@@ -693,16 +693,16 @@ public:
 						if (iter->_springLength >= 0.0)
 						{
 							//MAP is pulled towards minus end							
-							_kMinus = _kprob*exp((fabs(_mP.MAPstiffness* iter->_springLength))*_mP.MAPDiffSmLeft / (kBoltz*_mP.T));
-							_kPlus = _kprob*exp((-fabs(_mP.MAPstiffness* iter->_springLength))*(_mP.deltaPeriod - _mP.MAPDiffSmLeft) / (kBoltz*_mP.T));
+							_kMinus = _kprob*exp((fabs(springForce(_mP.MAPstiffness, iter->_springLength)))*_mP.MAPDiffSmLeft / (kBoltz*_mP.T));
+							_kPlus = _kprob*exp((-fabs(springForce(_mP.MAPstiffness, iter->_springLength)))*(_mP.deltaPeriod - _mP.MAPDiffSmLeft) / (kBoltz*_mP.T));
 
 						}
 						else
 						{
 							//MAP is pulled towards plus end
 
-							_kPlus = _kprob*exp((fabs(_mP.MAPstiffness* iter->_springLength))*_mP.MAPDiffSmRight / (kBoltz*_mP.T));
-							_kMinus = _kprob*exp((-fabs(_mP.MAPstiffness* iter->_springLength))*(_mP.deltaPeriod - _mP.MAPDiffSmRight) / (kBoltz*_mP.T));
+							_kPlus = _kprob*exp((fabs(springForce(_mP.MAPstiffness, iter->_springLength)))*_mP.MAPDiffSmRight / (kBoltz*_mP.T));
+							_kMinus = _kprob*exp((-fabs(springForce(_mP.MAPstiffness, iter->_springLength)))*(_mP.deltaPeriod - _mP.MAPDiffSmRight) / (kBoltz*_mP.T));
 
 						}
 					}
@@ -810,7 +810,7 @@ public:
 					
 					//std::cout << "iter->_springLength*_mP.KINESINstiffness " << iter->_springLength*_mP.KINESINstiffness << std::endl;
 					//
-					double KinesinVelocity = _mP.forceVelocityOn*(_mP.vUnloaded / (_mP.kinesinPparam + ((1 - _mP.kinesinPparam)*exp(_mP.KINESINstiffness*iter->_springLength*_mP.kinesinDparam / (kBoltz*_mP.T))))) + (1.0 - _mP.forceVelocityOn)*_mP.vUnloaded;
+					double KinesinVelocity = _mP.forceVelocityOn*(_mP.vUnloaded / (_mP.kinesinPparam + ((1 - _mP.kinesinPparam)*exp(springForce(_mP.KINESINstiffness, iter->_springLength)*_mP.kinesinDparam / (kBoltz*_mP.T))))) + (1.0 - _mP.forceVelocityOn)*_mP.vUnloaded;
 					//double pstep =exp(-KinesinVelocity*(_sP.timeStep / (2 * _mP.deltaPeriod)));
 					double pstep = 0.0;
 
@@ -827,7 +827,7 @@ public:
 							
 							saveStepingKinesin(_state.currentTime, iter->_mountCoordinate, iter->_MTsite,2);
 							// Count new summ forces
-							 _state.SummKINESINForces =  _state.SummKINESINForces + (_mP.KINESINstiffness*iter->_springLength);
+							 _state.SummKINESINForces =  _state.SummKINESINForces + (springForce(_mP.KINESINstiffness, iter->_springLength));
 							++iter;
 						}
 						else
@@ -839,14 +839,14 @@ public:
 							}
 							else
 							{
-								_state.SummKINESINForces = _state.SummKINESINForces + (_mP.KINESINstiffness* iter->_springLength);
+								_state.SummKINESINForces = _state.SummKINESINForces + springForce(_mP.KINESINstiffness, iter->_springLength);
 								++iter;
 							}
 						}
 					}
 					else {
 						//
-						 _state.SummKINESINForces =  _state.SummKINESINForces +(_mP.KINESINstiffness* iter->_springLength);
+						 _state.SummKINESINForces =  _state.SummKINESINForces + springForce(_mP.KINESINstiffness, iter->_springLength);
 						++iter;
 					}
 				}
@@ -893,13 +893,10 @@ public:
 			
 			////
 			 
-			if (_sP.BeadsSprings==0.0) {
+	
 				_state.MTpositionStep = (_sP.timeStep / _mP.gammaMT)*_SummForces + _mP.thermalNoiseOn*sqrt(2.0 * _mP.kT*_sP.timeStep / _mP.gammaMT) *	takeNormalRandomNumber();
-			}
-			if (_sP.BeadsSprings == 1.0) {
-				
-				_state.MTpositionStep = ((_sP.timeStep / _mP.gammaMT)*((2 * _mP.trapsringStiffness*(_state.MTposition - _intialMTposition))+_SummForces)) + _mP.thermalNoiseOn*((sqrt(2.0 * _mP.kT*_sP.timeStep / _mP.gammaMT) *	takeNormalRandomNumber())+(sqrt(2.0 * _mP.beadspringDiffusion*_sP.timeStep)*(takeNormalRandomNumber()+ takeNormalRandomNumber())));
-			}
+		
+			
 			 ////
 			 
 			 _state.MTposition = _state.MTposition +  _state.MTpositionStep;
