@@ -12,7 +12,7 @@ unsigned build_random_flat_seed() {
 	std::default_random_engine generatorMount(seedMount);
 	std::default_random_engine generator;
 	std::uniform_int_distribution<int> distribution(0, 99999999);
-	unsigned result = static_cast<unsigned>(distribution(generatorMount));;
+	unsigned result = static_cast<unsigned>(distribution(generatorMount));
 	//	std::cout << result << std::endl;
 	return result;
 
