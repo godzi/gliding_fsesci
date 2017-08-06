@@ -285,10 +285,10 @@ public:
 		}
 		else {
 			if (length >= 0.0) {
-				return (stiffness*length+criticalStiffness*(length - _mP.extensionCriticalLength));
+				return (stiffness*length+_mP.criticalStiffness*(length - _mP.extensionCriticalLength));
 			}
 			if (length < 0.0) {
-				return (stiffness*length + criticalStiffness*(length + _mP.extensionCriticalLength))
+				return (stiffness*length + _mP.criticalStiffness*(length + _mP.extensionCriticalLength));
 			}
 		}
 		
