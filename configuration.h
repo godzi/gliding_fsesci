@@ -93,6 +93,9 @@ struct ModelParameters
 	double MAPAssymDiffusion =0.0;
 	double MAPDiffSmRight;
 		double MAPDiffSmLeft;
+		double extensionCriticalLength;
+		double criticalStiffness;
+		
 };
 
 struct SystemState

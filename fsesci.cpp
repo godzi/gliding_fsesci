@@ -278,20 +278,20 @@ public:
 		return neededFlatBufferSize;
 	}
 	double springForce(double stiffness, double length) {
-		return stiffness*length;
-		/*
-		if (fabs(length) <= _mP.freeSpringLength) {
-			return 0.0;
+	//	return stiffness*length;
+				
+		if (fabs(length) <= _mP.extensionCriticalLength) {
+			return stiffness*length;
 		}
 		else {
 			if (length >= 0.0) {
-				return stiffness*(length - _mP.freeSpringLength);
+				return (stiffness*length+criticalStiffness*(length - _mP.extensionCriticalLength));
 			}
 			if (length < 0.0) {
-				return stiffness*(length + _mP.freeSpringLength);
+				return (stiffness*length + criticalStiffness*(length + _mP.extensionCriticalLength))
 			}
 		}
-		*/
+		
 		
 	}
 	//double taskStartTime,

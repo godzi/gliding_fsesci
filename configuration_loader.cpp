@@ -242,6 +242,12 @@ Configuration assign_config_from_json(Configuration conf, json jsonobj) {
 		conf.modelParameters.MAPDiffSmLeft = stod(jsonobj["ModelParameters"]["MAPDiffSmLeft"].get<std::string>());
 	}
 	
+	if (!(jsonobj["ModelParameters"]["extensionCriticalLength"].empty())) {
+		conf.modelParameters.extensionCriticalLength = stod(jsonobj["ModelParameters"]["extensionCriticalLength"].get<std::string>());
+	}
+	if (!(jsonobj["ModelParameters"]["criticalStiffness"].empty())) {
+		conf.modelParameters.criticalStiffness = stod(jsonobj["ModelParameters"]["criticalStiffness"].get<std::string>());
+	}
 	
 	//// Assign Initial Conditions from json
 	if (!(jsonobj["InitialConditions"]["MAPdistance"].empty())) {
