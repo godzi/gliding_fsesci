@@ -42,7 +42,7 @@ static constexpr unsigned nThreads = 5;
 // Initialize global constants
 //std::string inputparamfile = "C:\\Users\\Tolya\\Documents\\Visual Studio 2015\\Projects\\gliding_fsesci\\Release\\newconfig.json";
 const double E = std::exp(1.0);
-const double kBoltz= 1.38064852e-5;// (*pN um *)
+const double kBoltz= 1.38064852e-5;// (* pN um *)
 
 
 /// ToDo try to use ofstream rawwrite
@@ -106,14 +106,6 @@ public:
 		std::cout << "total steps" << (int)ceil(_sP.totalTime / _sP.timeStep) << std::endl;
 		return (int)ceil(_sP.totalTime / _sP.timeStep);
 
-	}
-
-
-	// kinesin force velocity
-	double calcKinesinVelocity(double Force) const
-	{
-			//
-			return  _mP.forceVelocityOn*(_mP.vUnloaded / (_mP.kinesinPparam + ((1 - _mP.kinesinPparam)*exp(Force*_mP.kinesinDparam / (kBoltz*_mP.T))))) + (1.0 - _mP.forceVelocityOn)*_mP.vUnloaded;
 	}
 
 
@@ -205,46 +197,24 @@ public:
 		{
 			/// Initial binding
 
-			if (_initC.oldInitialMount == 1.0)
+			
+			double mountcoord;
+			//Kinesin binding
+
+			for (double ind = 0.0; ind < _initC.numberKinesins; ind++)
 			{
-				for (double place = 0.0 + _initC.surfaceKINESINstartPoint; place < _initC.surfaceLength; place = place + _initC.KINESINdistance) {
-					for (double ind = _mP.numberKinesinsInOneSite; ind >= 1.0; ind--)
-					{
-						_unboundKinesins.emplace_back(place - (ind - 1.0)*(0.001 / _mP.numberKinesinsInOneSite), (int)ind);
-						kinesinCoordsLog->save(std::to_string((int)ind) + "	" + std::to_string(place - (ind - 1.0)*(0.001 / _mP.numberKinesinsInOneSite)) + "	");
-
-					}
-				}
-				for (double place = 0.0 + _initC.surfaceMAPstartPoint; place < _initC.surfaceLength; place = place + _initC.MAPdistance) {
-					for (double ind = _mP.numberMAPsInOneSite; ind >= 1.0; ind--)
-					{
-						_unboundMaps.emplace_back(place - (ind - 1.0)*(0.001 / _mP.numberMAPsInOneSite), (int)ind);
-						MAPCoordsLog->save(std::to_string((int)ind) + "	" + std::to_string(place - (ind - 1.0)*(0.001 / _mP.numberMAPsInOneSite)) + "	");
-					}
-				}
+				mountcoord = get_uniform_rnd_forMounts(_initC.surfaceKINESINstartPoint, _initC.surfaceLength, generatorMount);
+				_unboundKinesins.emplace_back(mountcoord, (int)ind);
+				kinesinCoordsLog->save(std::to_string((int)ind) + "	" + std::to_string(mountcoord) + "	");
 			}
-			else
+			//MAPs binding
+			for (double ind = 0.0; ind < _initC.numberMAPs; ind++)
 			{
-
-				double mountcoord;
-				//Kinesin binding
-
-				for (double ind = 0.0; ind < _initC.numberKinesins; ind++)
-				{
-					mountcoord = get_uniform_rnd_forMounts(_initC.surfaceKINESINstartPoint, _initC.surfaceLength, generatorMount);
-					_unboundKinesins.emplace_back(mountcoord, (int)ind);
-					kinesinCoordsLog->save(std::to_string((int)ind) + "	" + std::to_string(mountcoord) + "	");
-				}
-				//MAPs binding
-				for (double ind = 0.0; ind < _initC.numberMAPs; ind++)
-				{
-					mountcoord = get_uniform_rnd_forMounts(_initC.surfaceMAPstartPoint, _initC.surfaceLength, generatorMount);
-					_unboundMaps.emplace_back(mountcoord, (int)ind);
-					MAPCoordsLog->save(std::to_string((int)ind) + "	" + std::to_string(mountcoord) + "	");
-				}
-
-
+				mountcoord = get_uniform_rnd_forMounts(_initC.surfaceMAPstartPoint, _initC.surfaceLength, generatorMount);
+				_unboundMaps.emplace_back(mountcoord, (int)ind);
+				MAPCoordsLog->save(std::to_string((int)ind) + "	" + std::to_string(mountcoord) + "	");
 			}
+			
 
 		}
 		if (_sP.useInitialSetup == 1)
@@ -388,7 +358,7 @@ public:
 			
 			for (auto iter = _unboundMaps.begin(); iter != _unboundMaps.end(); ) {
 				_MTsystemCoordinate = iter->_mountCoordinate - _state.MTposition;
-				if ((takeFlatRandomNumber() > exp(-(_mP.MAPKon)*_sP.timeStep)) || (_mP.useMAPBindingKon == 0.0))
+				if ((takeFlatRandomNumber() > exp(-(_mP.MAPKon)*_sP.timeStep)))
 				{
 					if ((_MTsystemCoordinate < -0.5*_mP.deltaPeriod) || (_MTsystemCoordinate > (double(_NumberofMTsites) - 0.5)*_mP.deltaPeriod))
 					{
@@ -432,10 +402,10 @@ public:
 					_MTsystemCoordinate = iter->_mountCoordinate - _state.MTposition;
 
 
-					if ((takeFlatRandomNumber() > exp(-(_mP.KinesinKon)*_sP.timeStep)) || (_mP.useKinesinBindingKon == 0.0))
+					if ((takeFlatRandomNumber() > exp(-(_mP.KinesinKon)*_sP.timeStep)))
 					{
 
-						if ((_MTsystemCoordinate < -0.5*_mP.deltaPeriod) || (_MTsystemCoordinate > (double(_NumberofMTsites) - 0.5)*_mP.deltaPeriod))
+						if ((_MTsystemCoordinate < -0.5*_mP.deltaPeriod) || (_MTsystemCoordinate >(double(_NumberofMTsites) + 1)*_mP.deltaPeriod))
 						{
 							++iter;
 						}
@@ -451,6 +421,13 @@ public:
 								{
 									_sitenum = _sitenum + 1.0;
 								}
+							}
+
+
+							//correct if binding is away MT
+							if (_sitenum > double(_NumberofMTsites))
+							{
+								_sitenum = _NumberofMTsites;
 							}
 
 							_SurfaceDistanceofiSite = _state.MTposition + _mP.deltaPeriod*(_sitenum - 1.0);
@@ -492,107 +469,31 @@ public:
 					// Test for MAP unbinding
 					if (_initC.MAPUnbinding == 1.0)
 					{
-						
-						if (_mP.useMAPunbindingThreshold==0.0)
-						{
 
 
-							for (auto iter = _boundMaps.begin(); iter != _boundMaps.end(); ) {
-
-
-
-								_MAPsunbindProbability = _mP.MAPKoff*exp(fabs(springForce(_mP.MAPstiffness, (iter->_springLength)))*_mP.MAPfsmParforKoff / (kBoltz*_mP.T));
-
-								if (takeFlatRandomNumber() > exp((-(_MAPsunbindProbability)*_sP.timeStep)))
-								{
-									saveStepingMap(_state.currentTime, iter->_mountCoordinate, iter->_MTsite, -1);
-									std::cout << "this MAP was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << springForce(_mP.MAPstiffness, iter->_springLength) << "pN" << std::endl;
-									_unboundMaps.emplace_back(iter->_mountCoordinate, iter->_id);
-									iter = _boundMaps.erase(iter);
-
-
-
-								}
-								else
-								{
-									++iter;
-								}
-							}
-						}
-						if (_mP.useMAPunbindingThreshold == 1.0)
-						{
-							if (_mP.MAPunbindingThresholdisExponential == 0.0)
-							{
-
-								for (auto iter = _boundMaps.begin(); iter != _boundMaps.end(); ) {
-
-
-									if (((iter->_springLength) >= _mP.MAPThresholdRight) || ((iter->_springLength) <= -_mP.MAPThresholdLeft))
-									{
-										saveStepingMap(_state.currentTime, iter->_mountCoordinate, iter->_MTsite, -1);
-										std::cout << "this MAP was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << springForce(_mP.MAPstiffness, iter->_springLength) << "pN" << std::endl;
-										_unboundMaps.emplace_back(iter->_mountCoordinate, iter->_id);
-										iter = _boundMaps.erase(iter);
-
-
-
-									}
-									else
-									{
-										++iter;
-									}
-								}
-							}
-							if (_mP.MAPunbindingThresholdisExponential == 1.0)
-							{
-								for (auto iter = _boundMaps.begin(); iter != _boundMaps.end(); ) {
-
-
-									if (iter->_springLength <= 0.0)
-									{
-										_MAPsunbindProbability = _mP.MAPKoff*exp(fabs(springForce(_mP.MAPstiffness, iter->_springLength))*_mP.MAPThresholdRight / (kBoltz*_mP.T));
-									}
-									else
-									{
-										_MAPsunbindProbability = _mP.MAPKoff*exp(fabs(springForce(_mP.MAPstiffness, iter->_springLength))*_mP.MAPThresholdLeft / (kBoltz*_mP.T));
-									}
-
-									if (takeFlatRandomNumber() > exp((-(_MAPsunbindProbability)*_sP.timeStep)))
-									{
-										saveStepingMap(_state.currentTime, iter->_mountCoordinate, iter->_MTsite, -1);
-										std::cout << "this MAP was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << springForce(_mP.MAPstiffness, iter->_springLength) << "pN" << std::endl;
-										_unboundMaps.emplace_back(iter->_mountCoordinate, iter->_id);
-										iter = _boundMaps.erase(iter);
-
-
-
-									}
-									else
-									{
-										++iter;
-									}
-								}
-							}
-						}
-					}
-
-
-///////////////////// Map unbinding from dynamic MT
-					if (_mP.dynamicMT == 1.0)
-					{
 						for (auto iter = _boundMaps.begin(); iter != _boundMaps.end(); ) {
-							if ((iter->_MTsite) > _NumberofMTsites) 
+
+
+
+							_MAPsunbindProbability = _mP.MAPKoff*exp(fabs(springForce(_mP.MAPstiffness, (iter->_springLength)))*_mP.MAPfsmParforKoff / (kBoltz*_mP.T));
+
+							if (takeFlatRandomNumber() > exp((-(_MAPsunbindProbability)*_sP.timeStep)))
 							{
-								saveStepingMap(_state.currentTime, iter->_mountCoordinate, iter->_MTsite,-1);
-								std::cout << "this MAP was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << springForce(_mP.MAPstiffness, iter->_springLength) << "pN. From srinked MT" << std::endl;
-								_unboundMaps.emplace_back(iter->_mountCoordinate,iter->_id);
+								saveStepingMap(_state.currentTime, iter->_mountCoordinate, iter->_MTsite, -1);
+								std::cout << "this MAP was unbound " << iter->_mountCoordinate << " at time " << _state.currentTime << " s, under force " << springForce(_mP.MAPstiffness, iter->_springLength) << "pN" << std::endl;
+								_unboundMaps.emplace_back(iter->_mountCoordinate, iter->_id);
 								iter = _boundMaps.erase(iter);
+
+
+
 							}
 							else
 							{
 								++iter;
 							}
 						}
+
+
 					}
 
 
@@ -621,6 +522,7 @@ public:
 							else
 							{
 								//use kinesin CENP-E params
+								
 								_KinesinunbindProbability = 1 / (_mP.kinesinForceUnbindingA*exp(-fabs(springForce(_mP.KINESINstiffness, iter->_springLength) / _mP.kinesinForceUnbindingFd)));
 							}
 
@@ -694,7 +596,8 @@ public:
 						{
 							//MAP is pulled towards minus end							
 							_kMinus = _kprob*exp((fabs(springForce(_mP.MAPstiffness, iter->_springLength)))*_mP.MAPDiffSmLeft / (kBoltz*_mP.T));
-							_kPlus = _kprob*exp((-fabs(springForce(_mP.MAPstiffness, iter->_springLength)))*(_mP.deltaPeriod - _mP.MAPDiffSmLeft) / (kBoltz*_mP.T));
+							//_kPlus = _kprob*exp((-fabs(springForce(_mP.MAPstiffness, iter->_springLength)))*(_mP.deltaPeriod - _mP.MAPDiffSmLeft) / (kBoltz*_mP.T));
+							_kPlus = _kprob*exp((-fabs(springForce(_mP.MAPstiffness, iter->_springLength)))*_mP.MAPDiffSmLeft / (kBoltz*_mP.T));
 
 						}
 						else
@@ -702,7 +605,8 @@ public:
 							//MAP is pulled towards plus end
 
 							_kPlus = _kprob*exp((fabs(springForce(_mP.MAPstiffness, iter->_springLength)))*_mP.MAPDiffSmRight / (kBoltz*_mP.T));
-							_kMinus = _kprob*exp((-fabs(springForce(_mP.MAPstiffness, iter->_springLength)))*(_mP.deltaPeriod - _mP.MAPDiffSmRight) / (kBoltz*_mP.T));
+							//_kMinus = _kprob*exp((-fabs(springForce(_mP.MAPstiffness, iter->_springLength)))*(_mP.deltaPeriod - _mP.MAPDiffSmRight) / (kBoltz*_mP.T));
+							_kMinus = _kprob*exp((-fabs(springForce(_mP.MAPstiffness, iter->_springLength)))*_mP.MAPDiffSmRight / (kBoltz*_mP.T));
 
 						}
 					}
@@ -810,9 +714,9 @@ public:
 					
 					//std::cout << "iter->_springLength*_mP.KINESINstiffness " << iter->_springLength*_mP.KINESINstiffness << std::endl;
 					//
-					double KinesinVelocity = _mP.forceVelocityOn*(_mP.vUnloaded / (_mP.kinesinPparam + ((1 - _mP.kinesinPparam)*exp(springForce(_mP.KINESINstiffness, iter->_springLength)*_mP.kinesinDparam / (kBoltz*_mP.T))))) + (1.0 - _mP.forceVelocityOn)*_mP.vUnloaded;
-					//double pstep =exp(-KinesinVelocity*(_sP.timeStep / (2 * _mP.deltaPeriod)));
-					double pstep = 0.0;
+					double KinesinVelocity = (_mP.vUnloaded / (_mP.kinesinPparam + ((1 - _mP.kinesinPparam)*exp(springForce(_mP.KINESINstiffness, iter->_springLength)*_mP.kinesinDparam / (kBoltz*_mP.T)))));
+					double pstep =exp(-KinesinVelocity*(_sP.timeStep / (2 * _mP.deltaPeriod)));
+					//double pstep = 0.0;
 
 
 					if (takeFlatRandomNumber() > pstep)
@@ -889,7 +793,7 @@ public:
 
 				//////////////////
 
-			_SummForces = -_mP.MAPforcesOn* _state.SummMAPForces - _mP.KINESINforcesOn* _state.SummKINESINForces + _mP.constantForceonMT;
+			_SummForces = -_state.SummMAPForces -  _state.SummKINESINForces + _mP.constantForceonMT;
 			
 			////
 			 
